@@ -3,6 +3,9 @@ import re
 import os
 import sys
 import argparse
+import subprocess
+import webbrowser
+import glob
 from constants import (
     LATEX_SPECIAL_CHARS,
     SECTION_PATTERNS,
@@ -130,6 +133,132 @@ def write_latex_output(latex_content, output_path):
     except Exception as e:
         print(f"Error writing output file: {e}")
         sys.exit(1)
+
+#------------------------------------------------------------------------------
+# LaTeX Compilation Functions
+#------------------------------------------------------------------------------
+
+def compile_latex(tex_file, compiler="pdflatex", output_dir=None, continue_on_error=True, verbose=False, open_pdf=False, cleanup=False):
+    """
+    Compile a LaTeX file to PDF using the specified compiler.
+    
+    Args:
+        tex_file (str): Path to the LaTeX file to compile
+        compiler (str): LaTeX compiler to use ('pdflatex', 'xelatex', etc.)
+        output_dir (str): Directory to store output files (default: same as tex_file)
+        continue_on_error (bool): Whether to continue compilation despite errors
+        verbose (bool): Whether to print detailed compilation output
+        open_pdf (bool): Whether to open the PDF after successful compilation
+        cleanup (bool): Whether to clean up auxiliary files after compilation
+        
+    Returns:
+        bool: True if compilation succeeded, False otherwise
+    """
+    # Validate input file
+    if not os.path.isfile(tex_file):
+        print(f"Error: File {tex_file} not found.")
+        return False
+    
+    # Get file paths
+    tex_file = os.path.abspath(tex_file)
+    base_dir = os.path.dirname(tex_file)
+    filename = os.path.basename(tex_file)
+    base_filename = os.path.splitext(filename)[0]
+    
+    # Set output directory
+    if output_dir is None:
+        output_dir = base_dir
+    else:
+        output_dir = os.path.abspath(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Prepare compilation options
+    interaction_mode = "nonstopmode" if continue_on_error else "errorstopmode"
+    
+    # Try using latexmk (like Overleaf does)
+    print(f"Compiling {filename} with {compiler}...")
+    
+    # Map compiler names to latexmk options
+    if compiler == "pdflatex":
+        compiler_flag = "-pdf"
+    elif compiler == "latex":
+        compiler_flag = "-dvi"
+    elif compiler == "xelatex":
+        compiler_flag = "-xelatex"
+    elif compiler == "lualatex":
+        compiler_flag = "-lualatex"
+    else:
+        compiler_flag = "-pdf"  # Default
+    
+    # Build the command
+    cmd = [
+        "latexmk", 
+        compiler_flag,
+        "-interaction=" + interaction_mode,
+        "-file-line-error",
+        f"-output-directory={output_dir}",
+        tex_file
+    ]
+    
+    if verbose:
+        print(f"Running: {' '.join(cmd)}")
+    
+    # Run the compilation
+    try:
+        result = subprocess.run(cmd, 
+                               stdout=subprocess.PIPE if not verbose else None,
+                               stderr=subprocess.PIPE if not verbose else None,
+                               text=True)
+        
+        success = result.returncode == 0 or continue_on_error
+        
+        if not success and not verbose:
+            print("Compilation failed. Output:")
+            print(result.stdout)
+            print(result.stderr)
+            
+    except FileNotFoundError:
+        print("Latexmk not found. Please install TeX Live, MiKTeX, or another LaTeX distribution.")
+        return False
+    
+    # Check if PDF was generated
+    pdf_path = os.path.join(output_dir, base_filename + ".pdf")
+    if not os.path.exists(pdf_path):
+        print(f"Compilation completed, but no PDF file was generated at {pdf_path}")
+        return False
+    
+    print(f"Successfully compiled {tex_file} to {pdf_path}")
+    
+    # Clean up auxiliary files if requested
+    if cleanup:
+        print("Cleaning up auxiliary files...")
+        # Define auxiliary file extensions to clean up
+        aux_extensions = [
+            '*.aux', '*.log', '*.out', '*.toc', '*.lof', '*.lot', 
+            '*.bbl', '*.blg', '*.fls', '*.fdb_latexmk', '*.synctex.gz',
+            '*.nav', '*.snm', '*.vrb', '*.run.xml', '*.bcf', '*.dvi'
+        ]
+        
+        # Delete all auxiliary files
+        for ext in aux_extensions:
+            for file_path in glob.glob(os.path.join(output_dir, ext)):
+                try:
+                    if os.path.isfile(file_path) and not file_path.endswith('.pdf'):
+                        os.remove(file_path)
+                        if verbose:
+                            print(f"Removed: {file_path}")
+                except Exception as e:
+                    print(f"Failed to remove {file_path}: {e}")
+    
+    # Open the PDF if requested
+    if open_pdf and os.path.exists(pdf_path):
+        print(f"Opening PDF: {pdf_path}")
+        try:
+            webbrowser.open(f"file://{os.path.abspath(pdf_path)}")
+        except Exception as e:
+            print(f"Failed to open PDF: {e}")
+    
+    return True
 
 #------------------------------------------------------------------------------
 # Resume Section Formatting Functions
@@ -513,10 +642,27 @@ def parse_arguments():
     Returns:
         argparse.Namespace: Parsed command line arguments
     """
-    parser = argparse.ArgumentParser(description='Convert JSON resume to LaTeX format')
+    parser = argparse.ArgumentParser(description='Convert JSON resume to LaTeX format and optionally compile to PDF')
+    
+    # JSON to LaTeX conversion arguments
     parser.add_argument('--json', default=DEFAULT_JSON_PATH, help='Path to JSON resume file')
     parser.add_argument('--template', default=DEFAULT_TEMPLATE_PATH, help='Path to LaTeX template file')
     parser.add_argument('--output', default=DEFAULT_OUTPUT_PATH, help='Path for output LaTeX file')
+    
+    # LaTeX compilation arguments
+    parser.add_argument('--compile', '-c', action='store_true', help='Compile LaTeX file to PDF after generation')
+    parser.add_argument('--compiler', choices=['pdflatex', 'latex', 'xelatex', 'lualatex'], 
+                        default='pdflatex', help='LaTeX compiler to use')
+    parser.add_argument('--output-dir', '-o', help='Directory to store compilation output files')
+    parser.add_argument('--stop-on-error', '-s', action='store_true', 
+                        help='Stop compilation on first error')
+    parser.add_argument('--verbose', '-v', action='store_true', 
+                        help='Print detailed compilation output')
+    parser.add_argument('--open', '-p', action='store_true', 
+                        help='Open the PDF after successful compilation')
+    parser.add_argument('--cleanup', '-C', action='store_true',
+                        help='Clean up auxiliary files after compilation, keeping only the PDF')
+                        
     return parser.parse_args()
 
 def main():
@@ -541,7 +687,25 @@ def main():
     print(f"Writing output to: {args.output}")
     write_latex_output(populated_template, args.output)
     
-    print("Resume conversion complete!")
+    # Compile LaTeX to PDF if requested
+    if args.compile:
+        compile_success = compile_latex(
+            args.output,
+            compiler=args.compiler,
+            output_dir=args.output_dir,
+            continue_on_error=not args.stop_on_error,
+            verbose=args.verbose,
+            open_pdf=args.open,
+            cleanup=args.cleanup
+        )
+        
+        if compile_success:
+            print("Resume compilation complete!")
+        else:
+            print("Resume compilation failed.")
+            sys.exit(1)
+    else:
+        print("Resume conversion complete!")
 
 if __name__ == "__main__":
     main()
