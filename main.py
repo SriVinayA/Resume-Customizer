@@ -3,6 +3,22 @@ import re
 import os
 import sys
 import argparse
+from constants import (
+    LATEX_SPECIAL_CHARS,
+    SECTION_PATTERNS,
+    EDUCATION_PATTERNS,
+    DEFAULT_JSON_PATH,
+    DEFAULT_TEMPLATE_PATH,
+    DEFAULT_OUTPUT_PATH,
+    EMAIL_PATTERN,
+    LINKEDIN_PATTERN,
+    GITHUB_PATTERN,
+    PHONE_MIN_DIGITS
+)
+
+#------------------------------------------------------------------------------
+# Utility Functions
+#------------------------------------------------------------------------------
 
 def escape_latex_special_chars(text):
     """
@@ -20,22 +36,37 @@ def escape_latex_special_chars(text):
     # Process backslashes first to avoid double-escaping
     text = text.replace('\\', r'\textbackslash{}')
     
-    special_chars = {
-        '&': r'\&',
-        '%': r'\%',
-        '$': r'\$',
-        '#': r'\#',
-        '_': r'\_',
-        '{': r'\{',
-        '}': r'\}',
-        '~': r'\textasciitilde{}',
-        '^': r'\textasciicircum{}'
-    }
-    
-    for char, replacement in special_chars.items():
+    # Then handle other special characters
+    for char, replacement in LATEX_SPECIAL_CHARS.items():
         text = text.replace(char, replacement)
     
     return text
+
+def is_email(text):
+    """Check if text is likely an email address."""
+    return '@' in text and re.search(EMAIL_PATTERN, text) is not None
+
+def is_linkedin(text):
+    """Check if text is likely a LinkedIn profile."""
+    return LINKEDIN_PATTERN in text.lower()
+
+def is_github(text):
+    """Check if text is likely a GitHub profile."""
+    return GITHUB_PATTERN in text.lower()
+
+def is_phone(text):
+    """Check if text is likely a phone number."""
+    return any(c.isdigit() for c in text) and len([c for c in text if c.isdigit()]) >= PHONE_MIN_DIGITS
+
+def ensure_url_protocol(url, protocol='https://'):
+    """Ensure URL has a protocol prefix."""
+    if not url.startswith(('http://', 'https://')):
+        return f"{protocol}{url}"
+    return url
+
+#------------------------------------------------------------------------------
+# File IO Functions
+#------------------------------------------------------------------------------
 
 def read_json_resume(file_path):
     """
@@ -84,6 +115,26 @@ def read_latex_template(file_path):
         print(f"LaTeX template file not found: {file_path}")
         sys.exit(1)
 
+def write_latex_output(latex_content, output_path):
+    """
+    Write the populated LaTeX content to an output file.
+    
+    Args:
+        latex_content (str): Complete LaTeX document content
+        output_path (str): Path to write the output file
+    """
+    try:
+        with open(output_path, 'w', encoding='utf-8') as file:
+            file.write(latex_content)
+        print(f"LaTeX resume successfully generated: {output_path}")
+    except Exception as e:
+        print(f"Error writing output file: {e}")
+        sys.exit(1)
+
+#------------------------------------------------------------------------------
+# Resume Section Formatting Functions
+#------------------------------------------------------------------------------
+
 def format_personal_info(personal_info):
     """
     Format personal information for LaTeX.
@@ -97,34 +148,29 @@ def format_personal_info(personal_info):
     # Handle personal_info as a structured object (new format)
     if isinstance(personal_info, dict):
         name = escape_latex_special_chars(personal_info.get('name', 'Your Name'))
-        
-        # Collect contact information items with hyperlinks
         contact_items = []
         
+        # Format phone with tel: protocol
         if 'phone' in personal_info:
             phone = escape_latex_special_chars(personal_info['phone'])
-            # Add phone with tel: protocol
-            contact_items.append(f"\\href{{tel:{phone.replace('-', '')}}}{{{phone}}}")
+            phone_digits = phone.replace('-', '')
+            contact_items.append(f"\\href{{tel:{phone_digits}}}{{{phone}}}")
         
+        # Format email with mailto: protocol and underline
         if 'email' in personal_info:
             email = escape_latex_special_chars(personal_info['email'])
-            # Add email with mailto: protocol and underline
             contact_items.append(f"\\href{{mailto:{email}}}{{\\underline{{{email}}}}}")
         
+        # Format LinkedIn with proper URL and underline
         if 'linkedin' in personal_info:
             linkedin = escape_latex_special_chars(personal_info['linkedin'])
-            # Add LinkedIn with https:// if needed
-            linkedin_url = linkedin
-            if not linkedin.startswith(('http://', 'https://')):
-                linkedin_url = f"https://{linkedin}"
+            linkedin_url = ensure_url_protocol(linkedin)
             contact_items.append(f"\\href{{{linkedin_url}}}{{\\underline{{{linkedin}}}}}")
         
+        # Format GitHub with proper URL and underline
         if 'github' in personal_info:
             github = escape_latex_special_chars(personal_info['github'])
-            # Add GitHub with https:// if needed
-            github_url = github
-            if not github.startswith(('http://', 'https://')):
-                github_url = f"https://{github}"
+            github_url = ensure_url_protocol(github)
             contact_items.append(f"\\href{{{github_url}}}{{\\underline{{{github}}}}}")
         
         # Format contact info with pipe separators
@@ -140,12 +186,11 @@ def format_personal_info(personal_info):
         # Parse the personal info string
         parts = personal_info.strip().split('|')
         if len(parts) >= 1:
-            # First part usually contains the name
+            # Format name from first part
             name_parts = parts[0].strip().split()
-            if len(name_parts) >= 2:
-                name = escape_latex_special_chars(' '.join(name_parts[0:2]))
-            else:
-                name = escape_latex_special_chars(parts[0].strip())
+            name = escape_latex_special_chars(
+                ' '.join(name_parts[0:2]) if len(name_parts) >= 2 else parts[0].strip()
+            )
             
             # Format contact info with hyperlinks
             formatted_parts = []
@@ -153,24 +198,15 @@ def format_personal_info(personal_info):
                 part = part.strip()
                 escaped_part = escape_latex_special_chars(part)
                 
-                # Check if this part is likely an email
-                if '@' in part and '.' in part.split('@')[1]:
+                if is_email(part):
                     formatted_parts.append(f"\\href{{mailto:{escaped_part}}}{{\\underline{{{escaped_part}}}}}")
-                # Check if this part is likely a LinkedIn profile
-                elif 'linkedin.com' in part.lower():
-                    linkedin_url = part
-                    if not part.startswith(('http://', 'https://')):
-                        linkedin_url = f"https://{part}"
+                elif is_linkedin(part):
+                    linkedin_url = ensure_url_protocol(part)
                     formatted_parts.append(f"\\href{{{linkedin_url}}}{{\\underline{{{escaped_part}}}}}")
-                # Check if this part is likely a GitHub profile
-                elif 'github.com' in part.lower():
-                    github_url = part
-                    if not part.startswith(('http://', 'https://')):
-                        github_url = f"https://{part}"
+                elif is_github(part):
+                    github_url = ensure_url_protocol(part)
                     formatted_parts.append(f"\\href{{{github_url}}}{{\\underline{{{escaped_part}}}}}")
-                # Check if this part is likely a phone number
-                elif any(c.isdigit() for c in part) and len([c for c in part if c.isdigit()]) >= 7:
-                    # Format as a phone number
+                elif is_phone(part):
                     phone_digits = ''.join([c for c in part if c.isdigit()])
                     formatted_parts.append(f"\\href{{tel:{phone_digits}}}{{{escaped_part}}}")
                 else:
@@ -207,19 +243,18 @@ def format_education(education):
             if isinstance(entry, dict):
                 # Get the institution name, clean up if needed
                 institution = entry.get('institution', '')
-                if institution.endswith(entry.get('location', '')):
+                location = entry.get('location', '')
+                
+                if institution.endswith(location):
                     # Remove the location from the institution if it's duplicated
-                    institution = institution.replace(entry.get('location', ''), '').strip()
+                    institution = institution.replace(location, '').strip()
                 
                 institution = escape_latex_special_chars(institution)
-                location = escape_latex_special_chars(entry.get('location', ''))
+                location = escape_latex_special_chars(location)
                 degree = escape_latex_special_chars(entry.get('degree', ''))
                 dates = escape_latex_special_chars(entry.get('dates', ''))
                 
-                edu_latex += f"""\\resumeSubheading
-{{{institution}}}{{{location}}}
-{{{degree}}}{{{dates}}}
-"""
+                edu_latex += format_education_entry(institution, location, degree, dates)
                 
                 # Add descriptions/achievements if available
                 if 'details' in entry and isinstance(entry['details'], list) and entry['details']:
@@ -231,16 +266,10 @@ def format_education(education):
     
     # Handle education as a string (legacy format)
     elif isinstance(education, str) and education.strip():
-        # Try to parse the education string using regex patterns
-        # First, split by common newline markers or university keywords
-        parts = re.split(r'(University|Institute|College|Aug \d{4})', education)
+        # Parse using regex patterns from constants
+        parts = re.split(EDUCATION_PATTERNS['institution_split'], education)
         
-        # Attempt to extract information based on the pattern
         institutions = []
-        locations = []
-        degrees = []
-        dates = []
-        
         # Extract all universities/institutes
         for i, part in enumerate(parts):
             if part in ["University", "Institute", "College"]:
@@ -248,14 +277,10 @@ def format_education(education):
                     inst = parts[i-1].strip() + part + parts[i+1].split("Master")[0].split("Bachelor")[0].strip()
                     institutions.append(inst.strip())
         
-        # Extract locations
-        locations = re.findall(r'([A-Za-z]+,\s*[A-Z]{2}|[A-Za-z]+,\s*[A-Za-z]+)', education)
-            
-        # Extract degrees
-        degrees = re.findall(r'((?:Master|Bachelor|PhD|Doctor)[^,\n]*(?:Science|Arts|Engineering|Computer)[^,\n]*)', education)
-        
-        # Extract dates
-        dates = re.findall(r'(Aug \d{4} – May \d{4})', education)
+        # Extract other information
+        locations = re.findall(EDUCATION_PATTERNS['location'], education)
+        degrees = re.findall(EDUCATION_PATTERNS['degree'], education)
+        dates = re.findall(EDUCATION_PATTERNS['dates'], education)
         
         # Create entries from extracted data
         edu_entries = []
@@ -276,13 +301,17 @@ def format_education(education):
             degree = escape_latex_special_chars(entry['degree'])
             dates = escape_latex_special_chars(entry['dates'])
             
-            edu_latex += f"""\\resumeSubheading
-{{{institution}}}{{{location}}}
-{{{degree}}}{{{dates}}}
-"""
+            edu_latex += format_education_entry(institution, location, degree, dates)
     
     edu_latex += "\\resumeSubHeadingListEnd\n"
     return edu_latex
+
+def format_education_entry(institution, location, degree, dates):
+    """Helper function to format a single education entry."""
+    return f"""\\resumeSubheading
+{{{institution}}}{{{location}}}
+{{{degree}}}{{{dates}}}
+"""
 
 def format_experience(experience):
     """
@@ -426,6 +455,10 @@ def format_projects(projects):
     # Default return if format is unexpected or empty
     return "\\section{Projects}\n\\resumeSubHeadingListStart\n\\resumeSubHeadingListEnd\n"
 
+#------------------------------------------------------------------------------
+# Template Processing Functions 
+#------------------------------------------------------------------------------
+
 def populate_template(template, resume_data):
     """
     Replace content in template with resume data from JSON.
@@ -441,62 +474,37 @@ def populate_template(template, resume_data):
     populated_template = template
     
     # Format the sections first
-    personal_info_section = format_personal_info(resume_data.get('personal_info', ''))
-    education_section = format_education(resume_data.get('education', ''))
-    experience_section = format_experience(resume_data.get('experience', []))
-    projects_section = format_projects(resume_data.get('projects', []))
-    skills_section = format_skills(resume_data.get('skills', []))
-    
-    # Define section patterns and their replacements with more precise patterns
-    section_patterns = {
-        # Personal info section (between \begin{center} and \end{center})
-        r'\\begin{center}\s*\\textbf{\\Huge \\scshape.+?\\end{center}': 
-            personal_info_section,
-        
-        # Education section - match the actual education section format in the template
-        r'\\section{Education}\s*\\resumeSubHeadingListStart.*?\\resumeSubHeadingListEnd': 
-            education_section,
-        
-        # Experience section - more precise pattern
-        r'\\section{Experience}\s*\\resumeSubHeadingListStart.*?\\resumeSubHeadingListEnd': 
-            experience_section,
-        
-        # Projects section - more precise pattern
-        r'\\section{Projects}\s*\\resumeSubHeadingListStart.*?\\resumeSubHeadingListEnd': 
-            projects_section,
-        
-        # Skills section - more precise pattern
-        r'\\section{Technical Skills}\s*\\begin{itemize}.*?\\end{itemize}': 
-            skills_section
+    sections = {
+        'personal_info': format_personal_info(resume_data.get('personal_info', '')),
+        'education': format_education(resume_data.get('education', '')),
+        'experience': format_experience(resume_data.get('experience', [])),
+        'projects': format_projects(resume_data.get('projects', [])),
+        'skills': format_skills(resume_data.get('skills', []))
     }
     
     # Replace each section pattern with formatted content
-    for pattern, replacement in section_patterns.items():
+    for section_name, pattern in SECTION_PATTERNS.items():
         # Use a function for replacement to avoid escape sequence issues
-        populated_template = re.sub(pattern, lambda m: replacement, populated_template, flags=re.DOTALL)
+        populated_template = re.sub(
+            pattern, 
+            lambda m: sections[section_name], 
+            populated_template, 
+            flags=re.DOTALL
+        )
     
-    # Remove any duplicate sections or unwanted content that might be in the template
-    # This removes anything between "%-------------------------------------------" and the next section
-    populated_template = re.sub(r'%---+\s*\\resumeSubheading.*?(?=\\section|\s*\\end{document})', 
-                               '', populated_template, flags=re.DOTALL)
+    # Remove any duplicate sections or unwanted content
+    populated_template = re.sub(
+        r'%---+\s*\\resumeSubheading.*?(?=\\section|\s*\\end{document})', 
+        '', 
+        populated_template, 
+        flags=re.DOTALL
+    )
     
     return populated_template
 
-def write_latex_output(latex_content, output_path):
-    """
-    Write the populated LaTeX content to an output file.
-    
-    Args:
-        latex_content (str): Complete LaTeX document content
-        output_path (str): Path to write the output file
-    """
-    try:
-        with open(output_path, 'w', encoding='utf-8') as file:
-            file.write(latex_content)
-        print(f"LaTeX resume successfully generated: {output_path}")
-    except Exception as e:
-        print(f"Error writing output file: {e}")
-        sys.exit(1)
+#------------------------------------------------------------------------------
+# Command Line Interface Functions
+#------------------------------------------------------------------------------
 
 def parse_arguments():
     """
@@ -506,9 +514,9 @@ def parse_arguments():
         argparse.Namespace: Parsed command line arguments
     """
     parser = argparse.ArgumentParser(description='Convert JSON resume to LaTeX format')
-    parser.add_argument('--json', default='resume.json', help='Path to JSON resume file')
-    parser.add_argument('--template', default='template.tex', help='Path to LaTeX template file')
-    parser.add_argument('--output', default='generated_resume.tex', help='Path for output LaTeX file')
+    parser.add_argument('--json', default=DEFAULT_JSON_PATH, help='Path to JSON resume file')
+    parser.add_argument('--template', default=DEFAULT_TEMPLATE_PATH, help='Path to LaTeX template file')
+    parser.add_argument('--output', default=DEFAULT_OUTPUT_PATH, help='Path for output LaTeX file')
     return parser.parse_args()
 
 def main():
