@@ -1,0 +1,195 @@
+\documentclass{article}
+\usepackage{lmodern}
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\setlength{\footskip}{5pt}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+
+%----------FONT OPTIONS----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+\textbf{\Huge \scshape Vinay A} \\ \vspace{1pt}
+\small srivinay.appari@sjsu.edu $|$ linkedin.com/in/SriVinayA/ $|$ github.com/SriVinayA
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+\resumeSubheading
+{San Jos´ e State University San Jose}{San Jose, CA}
+{Master of Science in Software Engineering, Minor in Data Science}{Aug 2023 – May 2025}
+\resumeSubheading
+{Sathyabama Institute of Science and Technology Chennai}{Chennai, India}
+{Bachelor of Computer Science}{Aug 2016 – May 2020}
+\resumeSubHeadingListEnd
+
+
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+\resumeSubHeadingListStart
+\resumeSubheading
+{Salesforce Developer}{Jan 2023 – Aug 2023}
+{Dosti Global}{Hyderabad, India}
+\resumeItemListStart
+\resumeItem{Designed and developed customized Salesforce solutions using Apex, Visualforce, and Lightning Components, improving business process efficiency by 25\%.}
+\resumeItem{Integrated Salesforce with external systems using REST APIs and middleware, enabling seamless data flow and reducing integration time by 30\%.}
+\resumeItem{Managed data migration and quality within Salesforce, ensuring 99.9\% data accuracy and compliance with governance standards.}
+\resumeItem{Developed and executed comprehensive test plans, reducing post-deployment issues by 20\%.}
+\resumeItem{Collaborated with cross-functional teams to gather requirements and deliver scalable Salesforce solutions, meeting 100\% of project objectives.}
+\resumeItemListEnd
+\resumeSubheading
+{Salesforce Developer}{Sept 2021 – Jan 2023}
+{Mastercard (Contract)}{Pune, India}
+\resumeItemListStart
+\resumeItem{Customized Salesforce applications using Apex and Lightning Web Components (LWC), enhancing user experience and increasing adoption rates by 15\%.}
+\resumeItem{Implemented Salesforce DX and CI/CD tools, reducing deployment time by 25\% and improving release cycle efficiency.}
+\resumeItem{Collaborated with business analysts to translate requirements into technical solutions, achieving a 95\% stakeholder satisfaction rate.}
+\resumeItem{Provided ongoing maintenance and support for Salesforce applications, resolving critical issues within SLA timelines.}
+\resumeItem{Documented technical specifications and user guides, improving team knowledge sharing and onboarding efficiency.}
+\resumeItemListEnd
+\resumeSubheading
+{Salesforce Developer}{Sept 2020 – Sept 2021}
+{Wipro}{Hyderabad, India}
+\resumeItemListStart
+\resumeItem{Developed Salesforce workflows and process builder automations, reducing manual effort by 30\%.}
+\resumeItem{Configured custom objects and fields to support business requirements, improving data organization and accessibility.}
+\resumeItem{Participated in Agile/Scrum methodologies, delivering solutions within sprint timelines and maintaining 100\% on-time delivery.}
+\resumeItem{Troubleshot and resolved technical issues, improving system performance and reducing downtime by 15\%.}
+\resumeItem{Gained hands-on experience with Salesforce Communities and Mobile, enhancing platform versatility.}
+\resumeItemListEnd
+\resumeSubHeadingListEnd
+
+\section{Projects}
+\resumeSubHeadingListStart
+\resumeProjectHeading
+{\textbf{Salesforce Integration for Financial Transactions} $|$ \emph{Salesforce, Apex, REST APIs, Middleware}}{}
+\resumeItemListStart
+\resumeItem{Designed and implemented a Salesforce integration solution for financial transaction processing, reducing latency by 20\%.}
+\resumeItem{Achieved 99.9\% uptime by leveraging Salesforce best practices and robust error-handling mechanisms.}
+\resumeItem{Integrated machine learning models for real-time fraud detection, improving transaction security by 30\%.}
+\resumeItemListEnd
+\resumeProjectHeading
+{\textbf{Salesforce Community Portal for Customer Engagement} $|$ \emph{Salesforce Communities, Lightning Web Components (LWC), Apex}}{}
+\resumeItemListStart
+\resumeItem{Developed a Salesforce Community portal to enhance customer engagement, increasing user adoption by 25\%.}
+\resumeItem{Implemented responsive design using Lightning Web Components, improving mobile accessibility and user satisfaction.}
+\resumeItem{Reduced support ticket volume by 30\% through self-service features and automated workflows.}
+\resumeItemListEnd
+\resumeSubHeadingListEnd
+
+
+
+
+%
+%-----------PROGRAMMING SKILLS-----------
+\section{Technical Skills}
+\begin{itemize}[leftmargin=0.15in, label={}]
+\small{\item{
+\textbf{Languages}: Apex, Java, Python, JavaScript \\
+\textbf{Salesforce Technologies}: Visualforce, Lightning Components (LWC), Salesforce APIs, Salesforce DX \\
+\textbf{Integration Tools}: REST/SOAP APIs, Middleware, ETL Tools \\
+\textbf{Developer Tools}: Git, Jenkins, CI/CD Tools, Salesforce Workbench \\
+\textbf{Core Concepts}: Salesforce Architecture, Data Migration, Data Governance, Agile/Scrum Methodologies \\
+\textbf{Certifications}: Salesforce Platform Developer I (in progress)
+}}
+\end{itemize}
+
+
+
+%-------------------------------------------
+\end{document}
