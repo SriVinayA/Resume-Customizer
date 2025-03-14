@@ -89,12 +89,54 @@ def format_personal_info(personal_info):
     Format personal information for LaTeX.
     
     Args:
-        personal_info (str): Personal information string from JSON
+        personal_info (dict or str): Personal information from JSON
         
     Returns:
         str: Formatted LaTeX for personal information section
     """
-    if isinstance(personal_info, str):
+    # Handle personal_info as a structured object (new format)
+    if isinstance(personal_info, dict):
+        name = escape_latex_special_chars(personal_info.get('name', 'Your Name'))
+        
+        # Collect contact information items with hyperlinks
+        contact_items = []
+        
+        if 'phone' in personal_info:
+            phone = escape_latex_special_chars(personal_info['phone'])
+            # Add phone with tel: protocol
+            contact_items.append(f"\\href{{tel:{phone.replace('-', '')}}}{{{phone}}}")
+        
+        if 'email' in personal_info:
+            email = escape_latex_special_chars(personal_info['email'])
+            # Add email with mailto: protocol and underline
+            contact_items.append(f"\\href{{mailto:{email}}}{{\\underline{{{email}}}}}")
+        
+        if 'linkedin' in personal_info:
+            linkedin = escape_latex_special_chars(personal_info['linkedin'])
+            # Add LinkedIn with https:// if needed
+            linkedin_url = linkedin
+            if not linkedin.startswith(('http://', 'https://')):
+                linkedin_url = f"https://{linkedin}"
+            contact_items.append(f"\\href{{{linkedin_url}}}{{\\underline{{{linkedin}}}}}")
+        
+        if 'github' in personal_info:
+            github = escape_latex_special_chars(personal_info['github'])
+            # Add GitHub with https:// if needed
+            github_url = github
+            if not github.startswith(('http://', 'https://')):
+                github_url = f"https://{github}"
+            contact_items.append(f"\\href{{{github_url}}}{{\\underline{{{github}}}}}")
+        
+        # Format contact info with pipe separators
+        contact_info = ' $|$ '.join(contact_items)
+        
+        return f"""\\begin{{center}}
+\\textbf{{\\Huge \\scshape {name}}} \\\\ \\vspace{{1pt}}
+\\small {contact_info}
+\\end{{center}}"""
+    
+    # Handle personal_info as a string (legacy format)
+    elif isinstance(personal_info, str):
         # Parse the personal info string
         parts = personal_info.strip().split('|')
         if len(parts) >= 1:
@@ -105,8 +147,36 @@ def format_personal_info(personal_info):
             else:
                 name = escape_latex_special_chars(parts[0].strip())
             
-            # Format contact info
-            contact_info = ' $|$ '.join([escape_latex_special_chars(part.strip()) for part in parts[1:]])
+            # Format contact info with hyperlinks
+            formatted_parts = []
+            for part in parts[1:]:
+                part = part.strip()
+                escaped_part = escape_latex_special_chars(part)
+                
+                # Check if this part is likely an email
+                if '@' in part and '.' in part.split('@')[1]:
+                    formatted_parts.append(f"\\href{{mailto:{escaped_part}}}{{\\underline{{{escaped_part}}}}}")
+                # Check if this part is likely a LinkedIn profile
+                elif 'linkedin.com' in part.lower():
+                    linkedin_url = part
+                    if not part.startswith(('http://', 'https://')):
+                        linkedin_url = f"https://{part}"
+                    formatted_parts.append(f"\\href{{{linkedin_url}}}{{\\underline{{{escaped_part}}}}}")
+                # Check if this part is likely a GitHub profile
+                elif 'github.com' in part.lower():
+                    github_url = part
+                    if not part.startswith(('http://', 'https://')):
+                        github_url = f"https://{part}"
+                    formatted_parts.append(f"\\href{{{github_url}}}{{\\underline{{{escaped_part}}}}}")
+                # Check if this part is likely a phone number
+                elif any(c.isdigit() for c in part) and len([c for c in part if c.isdigit()]) >= 7:
+                    # Format as a phone number
+                    phone_digits = ''.join([c for c in part if c.isdigit()])
+                    formatted_parts.append(f"\\href{{tel:{phone_digits}}}{{{escaped_part}}}")
+                else:
+                    formatted_parts.append(escaped_part)
+            
+            contact_info = ' $|$ '.join(formatted_parts)
             
             return f"""\\begin{{center}}
 \\textbf{{\\Huge \\scshape {name}}} \\\\ \\vspace{{1pt}}
@@ -124,120 +194,24 @@ def format_education(education):
     Format education section for LaTeX.
     
     Args:
-        education (str or list): Education information from JSON
+        education (list or str): Education information from JSON
         
     Returns:
         str: Formatted LaTeX for education section
     """
     edu_latex = "\\section{Education}\n\\resumeSubHeadingListStart\n"
     
-    # Handle education as a string (current format in the JSON)
-    if isinstance(education, str) and education.strip():
-        # The education string format is challenging to parse with regex
-        # Let's hard-code the entries based on the actual content we observed in resume.json
-        if "San Jos" in education and "Sathyabama" in education:
-            edu_entries = [
-                {
-                    'institution': 'San José State University',
-                    'location': 'San Jose, CA',
-                    'degree': 'Master of Science in Software Engineering, Minor in Data Science',
-                    'dates': 'Aug 2023 – May 2025'
-                },
-                {
-                    'institution': 'Sathyabama Institute of Science and Technology',
-                    'location': 'Chennai, India',
-                    'degree': 'Bachelor of Computer Science',
-                    'dates': 'Aug 2016 – May 2020'
-                }
-            ]
-        else:
-            # Try to parse the education string using regex patterns
-            # First, split by common newline markers or university keywords
-            parts = re.split(r'(University|Institute|College|Aug \d{4})', education)
-            
-            # Attempt to extract information based on the pattern
-            institutions = []
-            locations = []
-            degrees = []
-            dates = []
-            
-            # Extract all universities/institutes
-            for i, part in enumerate(parts):
-                if part in ["University", "Institute", "College"]:
-                    if i > 0 and i+1 < len(parts):
-                        inst = parts[i-1].strip() + part + parts[i+1].split("Master")[0].split("Bachelor")[0].strip()
-                        institutions.append(inst.strip())
-            
-            # Extract locations
-            if "San Jose, CA" in education:
-                locations.append("San Jose, CA")
-            if "Chennai, India" in education:
-                locations.append("Chennai, India")
-                
-            # Extract degrees
-            if "Master of Science" in education:
-                match = re.search(r'Master of Science[^,]*(?:,\s*Minor[^,]*)?', education)
-                if match:
-                    degrees.append(match.group(0))
-                else:
-                    degrees.append("Master of Science in Software Engineering")
-            
-            if "Bachelor of" in education:
-                match = re.search(r'Bachelor of[^,]*(?:,\s*Minor[^,]*)?', education)
-                if match:
-                    degrees.append(match.group(0))
-                else:
-                    degrees.append("Bachelor of Computer Science")
-            
-            # Extract dates
-            dates = re.findall(r'(Aug \d{4} – May \d{4})', education)
-            
-            # Create entries from extracted data
-            edu_entries = []
-            for i in range(max(len(institutions), len(locations), len(degrees), len(dates))):
-                entry = {
-                    'institution': institutions[i] if i < len(institutions) else '',
-                    'location': locations[i] if i < len(locations) else '',
-                    'degree': degrees[i] if i < len(degrees) else '',
-                    'dates': dates[i] if i < len(dates) else ''
-                }
-                if entry['institution'] and (entry['degree'] or entry['dates']):
-                    edu_entries.append(entry)
-            
-            # If we couldn't parse anything, return default entries
-            if not edu_entries:
-                edu_entries = [
-                    {
-                        'institution': 'San José State University',
-                        'location': 'San Jose, CA',
-                        'degree': 'Master of Science in Software Engineering, Minor in Data Science',
-                        'dates': 'Aug 2023 – May 2025'
-                    },
-                    {
-                        'institution': 'Sathyabama Institute of Science and Technology',
-                        'location': 'Chennai, India',
-                        'degree': 'Bachelor of Computer Science',
-                        'dates': 'Aug 2016 – May 2020'
-                    }
-                ]
-        
-        # Format entries in LaTeX
-        for entry in edu_entries:
-            institution = escape_latex_special_chars(entry['institution'])
-            location = escape_latex_special_chars(entry['location'])
-            degree = escape_latex_special_chars(entry['degree'])
-            dates = escape_latex_special_chars(entry['dates'])
-            
-            edu_latex += f"""\\resumeSubheading
-{{{institution}}}{{{location}}}
-{{{degree}}}{{{dates}}}
-"""
-    
-    # Handle education as a list of dictionaries (alternative format)
-    elif isinstance(education, list) and education:
+    # Handle education as a list of dictionaries (new format)
+    if isinstance(education, list) and education:
         for entry in education:
             if isinstance(entry, dict):
-                institution = escape_latex_special_chars(entry.get('institution', ''))
+                # Get the institution name, clean up if needed
+                institution = entry.get('institution', '')
+                if institution.endswith(entry.get('location', '')):
+                    # Remove the location from the institution if it's duplicated
+                    institution = institution.replace(entry.get('location', ''), '').strip()
+                
+                institution = escape_latex_special_chars(institution)
                 location = escape_latex_special_chars(entry.get('location', ''))
                 degree = escape_latex_special_chars(entry.get('degree', ''))
                 dates = escape_latex_special_chars(entry.get('dates', ''))
@@ -254,6 +228,58 @@ def format_education(education):
                         detail_text = escape_latex_special_chars(detail)
                         edu_latex += f"\\resumeItem{{{detail_text}}}\n"
                     edu_latex += "\\resumeItemListEnd\n"
+    
+    # Handle education as a string (legacy format)
+    elif isinstance(education, str) and education.strip():
+        # Try to parse the education string using regex patterns
+        # First, split by common newline markers or university keywords
+        parts = re.split(r'(University|Institute|College|Aug \d{4})', education)
+        
+        # Attempt to extract information based on the pattern
+        institutions = []
+        locations = []
+        degrees = []
+        dates = []
+        
+        # Extract all universities/institutes
+        for i, part in enumerate(parts):
+            if part in ["University", "Institute", "College"]:
+                if i > 0 and i+1 < len(parts):
+                    inst = parts[i-1].strip() + part + parts[i+1].split("Master")[0].split("Bachelor")[0].strip()
+                    institutions.append(inst.strip())
+        
+        # Extract locations
+        locations = re.findall(r'([A-Za-z]+,\s*[A-Z]{2}|[A-Za-z]+,\s*[A-Za-z]+)', education)
+            
+        # Extract degrees
+        degrees = re.findall(r'((?:Master|Bachelor|PhD|Doctor)[^,\n]*(?:Science|Arts|Engineering|Computer)[^,\n]*)', education)
+        
+        # Extract dates
+        dates = re.findall(r'(Aug \d{4} – May \d{4})', education)
+        
+        # Create entries from extracted data
+        edu_entries = []
+        for i in range(max(len(institutions), len(locations), len(degrees), len(dates))):
+            entry = {
+                'institution': institutions[i] if i < len(institutions) else '',
+                'location': locations[i] if i < len(locations) else '',
+                'degree': degrees[i] if i < len(degrees) else '',
+                'dates': dates[i] if i < len(dates) else ''
+            }
+            if entry['institution'] and (entry['degree'] or entry['dates']):
+                edu_entries.append(entry)
+        
+        # Format entries in LaTeX
+        for entry in edu_entries:
+            institution = escape_latex_special_chars(entry['institution'])
+            location = escape_latex_special_chars(entry['location'])
+            degree = escape_latex_special_chars(entry['degree'])
+            dates = escape_latex_special_chars(entry['dates'])
+            
+            edu_latex += f"""\\resumeSubheading
+{{{institution}}}{{{location}}}
+{{{degree}}}{{{dates}}}
+"""
     
     edu_latex += "\\resumeSubHeadingListEnd\n"
     return edu_latex
@@ -303,14 +329,31 @@ def format_skills(skills):
     Format skills section for LaTeX.
     
     Args:
-        skills (list): List of skills from JSON
+        skills (dict or list): Skills information from JSON
         
     Returns:
         str: Formatted LaTeX for skills section
     """
-    if isinstance(skills, list):
-        skills_latex = "\\section{Technical Skills}\n\\begin{itemize}[leftmargin=0.15in, label={}]\n\\small{\\item{\n"
+    skills_latex = "\\section{Technical Skills}\n\\begin{itemize}[leftmargin=0.15in, label={}]\n\\small{\\item{\n"
+    
+    # Handle skills as a dictionary with categories (new format)
+    if isinstance(skills, dict):
+        formatted_skills = []
         
+        # Process each category and its skills
+        for category, skill_list in skills.items():
+            if isinstance(skill_list, list) and skill_list:
+                # Format with the category in bold
+                category_text = escape_latex_special_chars(category)
+                skills_text = ", ".join([escape_latex_special_chars(skill) for skill in skill_list])
+                formatted_skills.append(f"\\textbf{{{category_text}}}: {skills_text}")
+        
+        # Join categories with line breaks
+        skills_text = " \\\\\n".join(formatted_skills)
+        skills_latex += skills_text
+    
+    # Handle skills as a flat list (legacy format)
+    elif isinstance(skills, list) and skills:
         # Make only the category part (before the colon) bold
         formatted_skills = []
         for skill in skills:
@@ -332,12 +375,9 @@ def format_skills(skills):
         # Join skills with proper LaTeX line breaks
         skills_text = " \\\\\n".join(formatted_skills)
         skills_latex += skills_text
-        
-        skills_latex += "\n}}\n\\end{itemize}\n"
-        return skills_latex
     
-    # Default return if format is unexpected
-    return "\\section{Technical Skills}\n\\begin{itemize}[leftmargin=0.15in, label={}]\n\\small{\\item{\\textbf{Skills}{: None specified}}}\n\\end{itemize}\n"
+    skills_latex += "\n}}\n\\end{itemize}\n"
+    return skills_latex
 
 def format_projects(projects):
     """
@@ -353,11 +393,21 @@ def format_projects(projects):
         proj_latex = "\\section{Projects}\n\\resumeSubHeadingListStart\n"
         
         for project in projects:
-            title = escape_latex_special_chars(project.get('title', ''))
-            technologies = escape_latex_special_chars(project.get('technologies', ''))
+            # Get project name from either 'name' or 'title' field
+            project_name = project.get('name', project.get('title', ''))
+            project_name = escape_latex_special_chars(project_name)
+            
+            # Handle technologies as either a string or an array
+            technologies = project.get('technologies', '')
+            if isinstance(technologies, list):
+                # Join the technologies list with commas without square brackets
+                technologies_formatted = ', '.join([escape_latex_special_chars(tech) for tech in technologies])
+            else:
+                # Use the technologies string as-is
+                technologies_formatted = escape_latex_special_chars(technologies)
             
             proj_latex += f"""\\resumeProjectHeading
-{{\\textbf{{{title}}} $|$ \\emph{{{technologies}}}}}{{}}
+{{\\textbf{{{project_name}}} $|$ \\emph{{{technologies_formatted}}}}}{{}}
 \\resumeItemListStart
 """
             
