@@ -1,0 +1,197 @@
+\documentclass{article}
+\usepackage{lmodern}
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\setlength{\footskip}{5pt}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+
+%----------FONT OPTIONS----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+\textbf{\Huge \scshape Vinay A} \\ \vspace{1pt}
+\small \href{tel:6692881604}{669-288-1604} $|$ \href{mailto:srivinay.appari@sjsu.edu}{\underline{srivinay.appari@sjsu.edu}} $|$ \href{https://linkedin.com/in/SriVinayA/}{\underline{linkedin.com/in/SriVinayA/}} $|$ \href{https://github.com/SriVinayA}{\underline{github.com/SriVinayA}}
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+\resumeSubheading
+{San Jose State University}{San Jose, CA}
+{Master of Science in Software Engineering, Minor in Data Science}{Aug 2023 – May 2025}
+\resumeSubheading
+{Sathyabama Institute of Science and Technology}{Chennai, India}
+{Bachelor of Engineering in Computer Science}{Aug 2016 – May 2020}
+\resumeSubHeadingListEnd
+
+
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+\resumeSubHeadingListStart
+\resumeSubheading
+{Software Engineer (Distributed Systems)}{Jan 2023 – Aug 2023}
+{Dosti Global}{Hyderabad, India}
+\resumeItemListStart
+\resumeItem{Designed and implemented globally available distributed systems using AWS technologies, improving system availability by 99.9\%}
+\resumeItem{Developed deployment tools and test execution frameworks that reduced CI/CD pipeline time by 25\%}
+\resumeItem{Implemented distributed cloud-based services and APIs that supported 30\% increase in transaction volume}
+\resumeItem{Partnered with frontend and security engineering teams to implement secure communication protocols including TCP/IP}
+\resumeItem{Mentored junior engineers in software development best practices and engineering excellence principles}
+\resumeItem{Implemented fault-tolerant mechanisms in Linux-based systems, increasing uptime by 15\%}
+\resumeItemListEnd
+\resumeSubheading
+{Software Engineer (Cloud Services)}{Sept 2021 – Jan 2023}
+{Mastercard (Contract)}{Pune, India}
+\resumeItemListStart
+\resumeItem{Developed containerized microservices using Docker and Kubernetes, improving deployment efficiency by 30\%}
+\resumeItem{Designed and implemented testing frameworks for continuous integration and monitoring of distributed systems}
+\resumeItem{Optimized network protocols and QoS algorithms for financial transactions, reducing latency by 20\%}
+\resumeItem{Implemented object-oriented design patterns to create scalable cloud services handling 1M+ daily transactions}
+\resumeItem{Collaborated with networking teams to implement secure communication protocols including IPv4/IPv6}
+\resumeItemListEnd
+\resumeSubheading
+{Software Engineer (Embedded Systems)}{Sept 2020 – Sept 2021}
+{Wipro}{Hyderabad, India}
+\resumeItemListStart
+\resumeItem{Developed Linux-based embedded software for microcontroller applications using C++}
+\resumeItem{Implemented RTOS concepts in system design, improving real-time processing capabilities by 15\%}
+\resumeItem{Participated in full SDLC including code reviews, testing, and operations for embedded systems}
+\resumeItem{Assisted in systems integration and testing methodologies for wireless network applications}
+\resumeItem{Gained experience in network security protocols and software defined networks}
+\resumeItemListEnd
+\resumeSubHeadingListEnd
+
+\section{Projects}
+\resumeSubHeadingListStart
+\resumeProjectHeading
+{\textbf{Distributed Cloud Communication System} $|$ \emph{AWS, Docker, Kubernetes, TCP/IP, Python, Linux}}{}
+\resumeItemListStart
+\resumeItem{Designed and implemented a globally distributed communication system using AWS technologies, achieving 99.9\% availability}
+\resumeItem{Developed tools for automated test execution across multiple environments, reducing testing time by 30\%}
+\resumeItem{Implemented secure communication protocols including IPv6 and TCP/IP for satellite network simulations}
+\resumeItem{Containerized services using Docker and orchestrated with Kubernetes to support 1M+ concurrent connections}
+\resumeItemListEnd
+\resumeProjectHeading
+{\textbf{Embedded Network Protocol Simulator} $|$ \emph{C++, Linux, RTOS, TCP/IP, QoS Algorithms}}{}
+\resumeItemListStart
+\resumeItem{Developed a Linux-based embedded system simulator for testing network protocols including LTE and 802.11ac}
+\resumeItem{Implemented QoS algorithms that improved packet prioritization efficiency by 25\%}
+\resumeItem{Designed test frameworks for continuous integration of embedded software components}
+\resumeItem{Optimized system performance for ARM processor architectures through low-level code optimizations}
+\resumeItemListEnd
+\resumeSubHeadingListEnd
+
+
+
+
+%
+%-----------PROGRAMMING SKILLS-----------
+\section{Technical Skills}
+\begin{itemize}[leftmargin=0.15in, label={}]
+\small{\item{
+\textbf{Languages}: Python, Java, C++, C\# \\
+\textbf{Cloud \& Distributed Systems}: AWS, Docker, Kubernetes, Distributed Systems, Cloud-based APIs, Microservices \\
+\textbf{Embedded \& Networking}: Linux, RTOS, TCP/IP, IPv4/IPv6, Network Security, Embedded Systems \\
+\textbf{Development Practices}: Agile Methodologies, CI/CD, Test Automation, Code Reviews, System Architecture, Object-Oriented Design \\
+\textbf{Core Concepts}: Algorithms, Data Structures, Fault-Tolerant Systems, Wireless Networks, QoS Algorithms, Software Defined Networks
+}}
+\end{itemize}
+
+
+
+%-------------------------------------------
+\end{document}

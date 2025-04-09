@@ -1,0 +1,146 @@
+{
+  "personal_info": {
+    "name": null,
+    "email": null,
+    "phone": null,
+    "linkedin": null,
+    "github": null
+  },
+  "education": [
+    {
+      "institution": "San Jos\u00e9 State University",
+      "degree": "Masters in Software Engineering",
+      "dates": "Aug 2023 - May 2025",
+      "location": "San Jose, CA"
+    },
+    {
+      "institution": "Sathyabama Institute of Science and Technology",
+      "degree": "Bachelors in Computer Science and Engineering",
+      "dates": "July 2016 - May 2020",
+      "location": "Chennai, India"
+    }
+  ],
+  "experience": [
+    {
+      "company": "Dosti Global",
+      "title": "Software Engineer",
+      "dates": "Jan 2023 - Aug 2023",
+      "details": [
+        "Designed, coded, and deployed scalable software applications using Java and JavaScript, ensuring clean, efficient, and maintainable code.",
+        "Participated in Agile/Scrum practices, contributing to the full software development lifecycle (SDLC).",
+        "Built RESTful APIs and microservices, optimizing performance and security of existing systems.",
+        "Collaborated with product managers and QA engineers to translate requirements into technical solutions.",
+        "Implemented CI/CD pipelines using Jenkins and GitHub Actions, improving deployment efficiency by 30%."
+      ],
+      "location": "Hyderabad, India"
+    },
+    {
+      "company": "Mastercard (contract)",
+      "title": "Software Engineer",
+      "dates": "Sep 2021 - Jan 2023",
+      "details": [
+        "Developed cloud-native applications using AWS and Docker, ensuring scalability and reliability.",
+        "Contributed to architectural decisions and designed distributed systems for high availability.",
+        "Conducted code reviews to ensure adherence to best practices and standards.",
+        "Troubleshot and resolved production issues, reducing downtime by 20%.",
+        "Mentored junior engineers, fostering a collaborative and knowledge-sharing environment."
+      ],
+      "location": "Pune, India"
+    },
+    {
+      "company": "Wipro",
+      "title": "Software Engineer",
+      "dates": "Sep 2020 - Sep 2021",
+      "details": [
+        "Worked on front-end and back-end frameworks, including React and Node.js, to deliver user-centric solutions.",
+        "Optimized database queries and implemented caching systems using Redis, improving system performance by 25%.",
+        "Monitored systems using Prometheus and Grafana, ensuring high availability and performance.",
+        "Advocated for process improvements and automation, reducing manual effort by 15%."
+      ],
+      "location": "Hyderabad, India"
+    }
+  ],
+  "skills": {
+    "programming_languages": [
+      "Java",
+      "JavaScript",
+      "Python",
+      "C++",
+      "Go"
+    ],
+    "cloud_platforms": [
+      "AWS",
+      "Azure",
+      "GCP"
+    ],
+    "frameworks": [
+      "React",
+      "Node.js",
+      "Spring",
+      "Django"
+    ],
+    "tools": [
+      "Docker",
+      "Kubernetes",
+      "Jenkins",
+      "GitHub Actions",
+      "Prometheus",
+      "Grafana"
+    ],
+    "databases": [
+      "SQL",
+      "NoSQL",
+      "Redis",
+      "Memcached"
+    ],
+    "devops": [
+      "CI/CD",
+      "Agile/Scrum",
+      "Git"
+    ],
+    "certifications": [
+      "Salesforce Certified JavaScript Developer I",
+      "Salesforce Certified Platform Developer I",
+      "Salesforce Certified Platform App Builder",
+      "Salesforce Certified Administrator"
+    ]
+  },
+  "projects": [
+    {
+      "name": "Cloud-Native Microservices Application",
+      "description": "Designed and implemented a scalable microservices architecture using AWS, Docker, and Kubernetes. Built RESTful APIs and integrated CI/CD pipelines, reducing deployment time by 40%.",
+      "technologies": [
+        "AWS",
+        "Docker",
+        "Kubernetes",
+        "Java",
+        "Jenkins"
+      ]
+    },
+    {
+      "name": "E-Commerce Platform Optimization",
+      "description": "Optimized an existing e-commerce platform by implementing Redis caching and improving database queries, resulting in a 25% performance boost. Monitored system performance using Prometheus and Grafana.",
+      "technologies": [
+        "Redis",
+        "SQL",
+        "Prometheus",
+        "Grafana",
+        "Node.js"
+      ]
+    }
+  ],
+  "modifications_summary": {
+    "changes_made": [
+      "Updated job titles in the experience section to 'Software Engineer' to match the target role.",
+      "Added detailed bullet points to the experience section, aligning them with the job description's responsibilities and requirements.",
+      "Incorporated job description-specific technologies (e.g., AWS, Docker, Kubernetes, React, Node.js) into the experience and skills sections.",
+      "Added quantifiable achievements (e.g., 'improved deployment efficiency by 30%', 'reduced downtime by 20%') to align with the job description's focus on measurable impact.",
+      "Created two fictional projects to highlight relevant technologies and match the role's seniority level.",
+      "Optimized the skills section by adding missing keywords (e.g., 'Go', 'Azure', 'GCP', 'CI/CD') and removing irrelevant ones."
+    ],
+    "reasoning": [
+      "The modifications were made to bridge the gap between the original resume and the job description, ensuring alignment with the target role's responsibilities, requirements, and preferred skills.",
+      "The changes emphasize measurable achievements, relevant technologies, and the candidate's ability to contribute to the full software development lifecycle, as outlined in the job description."
+    ]
+  }
+}

@@ -1,0 +1,351 @@
+:root {
+    --primary-color: #28a745;
+    --primary-dark: #218838;
+    --secondary-color: #f5f7fa;
+    --text-color: #333;
+    --light-gray: #e1e5ee;
+    --medium-gray: #ccd2e5;
+    --dark-gray: #8c9ab7;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --border-radius: 4px;
+    --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--secondary-color);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+header h1 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+header p {
+    color: var(--dark-gray);
+}
+
+.card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.file-upload {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-upload-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border: 2px dashed var(--medium-gray);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.file-upload-label:hover {
+    border-color: var(--primary-color);
+}
+
+.file-upload-label span:first-child {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 5px 15px;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+}
+
+.file-name {
+    color: var(--dark-gray);
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius);
+    font-family: 'Roboto', sans-serif;
+    resize: vertical;
+    min-height: 200px;
+    transition: border-color 0.3s;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button[type="submit"] {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 25px;
+}
+
+.secondary-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 8px 15px;
+    font-size: 14px;
+}
+
+.overleaf-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.pdf-spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(40, 167, 69, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+    margin: 20px auto;
+    display: none;
+    position: relative;
+}
+
+.pdf-spinner::after {
+    content: "Processing PDF...";
+    position: absolute;
+    width: 200px;
+    left: -70px;
+    top: 70px;
+    text-align: center;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.results {
+    margin-top: 40px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.result-summary {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f8f9fe;
+    border-radius: var(--border-radius);
+}
+
+.result-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.result-section h3 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+.result-section ul {
+    padding-left: 20px;
+}
+
+.result-section li {
+    margin-bottom: 10px;
+}
+
+.result-details {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--light-gray);
+}
+
+.result-details pre {
+    background-color: #f8f9fe;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 300px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+    font-weight: 500;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.toast-close {
+    background: none;
+    font-size: 20px;
+    color: var(--dark-gray);
+    padding: 0;
+    margin-left: 10px;
+}
+
+.toast-error {
+    border-left: 4px solid var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.toast-success {
+    border-left: 4px solid var(--success-color);
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.toast-info {
+    border-left: 4px solid var(--primary-color);
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .card {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .result-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Full-screen loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 80px;
+    height: 80px;
+    border: 8px solid rgba(40, 167, 69, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto 20px;
+}
+
+.loading-text {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-top: 20px;
+} 

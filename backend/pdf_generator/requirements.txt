@@ -1,0 +1,6 @@
+# PDF Generation Dependencies
+pdflatex  # LaTeX compiler
+jinja2>=2.11.2  # Template engine for LaTeX templating
+python-dateutil>=2.8.2  # Date parsing and manipulation
+webbrowser>=0  # For opening PDFs
+pathlib>=1.0.1  # Path manipulation (part of standard library in Python 3.4+) 

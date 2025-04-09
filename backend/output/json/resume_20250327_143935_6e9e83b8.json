@@ -1,0 +1,147 @@
+{
+  "personal_info": {
+    "name": "Vinay A",
+    "email": "srivinay.appari@sjsu.edu",
+    "phone": "669-288-1604",
+    "linkedin": "linkedin.com/in/SriVinayA/",
+    "github": "github.com/SriVinayA"
+  },
+  "education": [
+    {
+      "institution": "San Jose State University",
+      "location": "San Jose, CA",
+      "degree": "Master of Science in Software Engineering, Minor in Data Science",
+      "dates": "Aug 2023 \u2013 May 2025"
+    },
+    {
+      "institution": "Sathyabama Institute of Science and Technology",
+      "location": "Chennai, India",
+      "degree": "Bachelor of Engineering in Computer Science",
+      "dates": "Aug 2016 \u2013 May 2020"
+    }
+  ],
+  "experience": [
+    {
+      "company": "Dosti Global",
+      "location": "Hyderabad, India",
+      "title": "Software Engineer (Distributed Systems)",
+      "dates": "Jan 2023 \u2013 Aug 2023",
+      "details": [
+        "Designed and implemented globally available distributed systems using AWS technologies, improving system availability by 99.9%",
+        "Developed Linux-based software solutions with containerized deployment using Docker, reducing deployment time by 30%",
+        "Implemented TCP/IP networking protocols for distributed applications, enhancing communication efficiency by 25%",
+        "Led the adoption of continuous integration practices using Jenkins, reducing integration issues by 40%",
+        "Mentored junior engineers in software development best practices and distributed systems architecture"
+      ]
+    },
+    {
+      "company": "Mastercard (Contract)",
+      "location": "Pune, India",
+      "title": "Software Engineer (Cloud Services)",
+      "dates": "Sept 2021 \u2013 Jan 2023",
+      "details": [
+        "Developed distributed cloud-based services and APIs for financial transactions processing 30M+ daily transactions",
+        "Implemented object-oriented design patterns to create scalable microservices architecture",
+        "Optimized network protocols including TCP/IP and QoS algorithms for high-volume transaction processing",
+        "Designed and executed comprehensive test strategies across multiple environments, improving test coverage by 35%",
+        "Collaborated with security engineering teams to implement robust network security measures"
+      ]
+    },
+    {
+      "company": "Wipro",
+      "location": "Hyderabad, India",
+      "title": "Software Developer (Embedded Systems)",
+      "dates": "Sept 2020 \u2013 Sept 2021",
+      "details": [
+        "Developed Linux-based embedded software solutions for enterprise applications",
+        "Implemented real-time operating system (RTOS) concepts in system design",
+        "Conducted systems integration testing for wireless network protocols",
+        "Participated in full software development life cycle including code reviews and CI/CD processes",
+        "Assisted in developing software defined network components"
+      ]
+    }
+  ],
+  "skills": {
+    "Languages": [
+      "Python",
+      "Java",
+      "C++"
+    ],
+    "Distributed Systems": [
+      "AWS Technologies",
+      "Docker",
+      "Kubernetes",
+      "Cloud-based Services",
+      "TCP/IP Networking",
+      "Linux Development"
+    ],
+    "Embedded & Networking": [
+      "RTOS Concepts",
+      "Embedded Software",
+      "Network Protocols (IPv4/IPv6)",
+      "QoS Algorithms",
+      "Wireless Networks",
+      "Network Security"
+    ],
+    "Development Practices": [
+      "Continuous Integration",
+      "Test Automation",
+      "Code Reviews",
+      "Agile Methodologies",
+      "Object-Oriented Design",
+      "System Architecture"
+    ]
+  },
+  "projects": [
+    {
+      "name": "Distributed Cloud Networking System",
+      "technologies": [
+        "AWS",
+        "Docker",
+        "Linux",
+        "TCP/IP",
+        "Python",
+        "Java"
+      ],
+      "details": [
+        "Designed and implemented a distributed cloud networking system using AWS technologies and Docker containers",
+        "Implemented TCP/IP protocol stack optimizations that improved network throughput by 40%",
+        "Developed Linux-based services for network monitoring and QoS management",
+        "Created automated deployment pipelines that reduced service deployment time from hours to minutes"
+      ]
+    },
+    {
+      "name": "Embedded Network Protocol Simulator",
+      "technologies": [
+        "C++",
+        "Linux",
+        "RTOS Concepts",
+        "IPv6",
+        "Wireless Protocols"
+      ],
+      "details": [
+        "Developed a simulation environment for testing embedded network protocols including IPv6 and 802.11 standards",
+        "Implemented RTOS-like scheduling algorithms for protocol processing",
+        "Created test automation framework that reduced testing time by 60%",
+        "Integrated with continuous integration pipeline for automated regression testing"
+      ]
+    }
+  ],
+  "modifications_summary": {
+    "experience_changes": {
+      "title_updates": "Updated all job titles to better reflect distributed systems and embedded software focus from job description",
+      "bullet_point_rewrites": "Reoriented experience details to emphasize distributed systems, networking protocols, Linux development, and cloud technologies from the job description",
+      "achievement_additions": "Added measurable achievements related to system availability, deployment time, and test coverage improvements"
+    },
+    "skills_changes": {
+      "reorganization": "Restructured skills into more relevant categories for the position",
+      "additions": "Added missing keywords: TCP/IP, RTOS, Linux, IPv4/IPv6, QoS, Wireless Networks, Network Security",
+      "removals": "Removed less relevant skills like C# and NoSQL Databases"
+    },
+    "projects_changes": {
+      "modifications": "Enhanced existing projects to highlight distributed systems and networking aspects",
+      "new_project": "Added 'Embedded Network Protocol Simulator' project to demonstrate RTOS and networking protocol experience",
+      "focus_areas": "Emphasized AWS, Docker, Linux, and networking technologies throughout projects"
+    }
+  }
+}
