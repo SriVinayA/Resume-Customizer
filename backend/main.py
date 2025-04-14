@@ -409,10 +409,13 @@ def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) 
            IMPORTANT: Do NOT include framework markers like "(X)", "(Y)", "(Z)", "(Task)", "(Action)", or "(Result)" in the final text.
 
         2. **Experience Section:**  
+           - IMPORTANT: For job titles, use ONLY the title itself. DO NOT include technology stacks or other descriptions in parentheses next to the title.
            - Use hybrid XYZ/S.T.A.R. bullets for each role:  
              *Template:* "[Action Verb] [Task], achieving [Metric] via [Method/Tool], addressing [JD Keyword]."  
              *Example:* "Streamlined onboarding process, reducing employee ramp-up time by 30% through implementation of an automated HRIS system."
              IMPORTANT: Do NOT include framework markers like "(X)", "(Y)", "(Z)", "(Task)", "(Action)", or "(Result)" in the final text.
+           - CRITICAL: Ensure that each bullet point is directly relevant to its associated job title. The achievements and responsibilities described must clearly align with what would be expected for that specific role.
+           - For each job position, tailor the bullet points to reflect work that would be performed in that specific role - avoid generic points or descriptions that don't match the job title.
 
         3. **Projects Section:**  
            - Highlight projects using S.T.A.R.:  
@@ -430,12 +433,16 @@ def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) 
 
         5. **Job Title Adjustments:**
            - Change job titles in experience section to better align with the target role in the job description
+           - IMPORTANT: Display job titles as simple text without any technology stack or descriptions in parentheses
+           - When adjusting job titles, ensure that the corresponding bullet points remain appropriate and relevant to the new title. If necessary, also adjust the bullet points to maintain consistency with the job title.
 
         ### **Validation Checklist**
         - All bullets follow XYZ or S.T.A.R. structure with quantifiable results (Y).  
         - 70%+ of job description keywords appear in the resume's first half.  
         - Metrics are specific and use percentages, dollar amounts, or time saved where possible.  
         - Formatting adheres to ATS standards.
+        - Job titles do NOT include technology stacks in parentheses.
+        - Each job title and its associated bullet points are properly aligned and relevant to each other.
         
         RESPONSE FORMAT:
         Generate a customized version of the resume that follows these rules. Return the result as a structured JSON with the following sections:
@@ -455,7 +462,7 @@ def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) 
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
-                {"role": "system", "content": "You are an expert resume architect that customizes resumes to match job descriptions while following strict preservation and modification rules. IMPORTANT: Never include structural markers like '(Task)', '(Action)', '(Result)', '(X)', '(Y)', or '(Z)' in the final content - use these only as frameworks for creating the content. Also, use proper category names without underscores (e.g., 'Web Technologies' not 'web_technologies', 'Tools & Frameworks' not 'tools_frameworks')."},
+                {"role": "system", "content": "You are an expert resume architect that customizes resumes to match job descriptions while following strict preservation and modification rules. IMPORTANT: Never include structural markers like '(Task)', '(Action)', '(Result)', '(X)', '(Y)', or '(Z)' in the final content - use these only as frameworks for creating the content. Also, use proper category names without underscores (e.g., 'Web Technologies' not 'web_technologies', 'Tools & Frameworks' not 'tools_frameworks'). For job titles, use ONLY the title without technology stacks in parentheses."},
                 {"role": "user", "content": prompt},
             ],
             stream=False
