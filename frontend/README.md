@@ -1,56 +1,36 @@
-# Resume Customizer UI
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-This is a simple web interface for interacting with the Resume Customizer API. It allows users to upload a resume, enter a job description, and get a customized resume with PDF output.
+## Getting Started
 
-## Features
-
-- Upload resume in PDF format
-- Enter job description
-- View customized resume details
-- Download generated PDF
-- View raw JSON response
-
-## How to Run
-
-### 1. Start the Backend API
-
-First, make sure the FastAPI backend is running:
+First, run the development server:
 
 ```bash
-cd backend
-uvicorn main:app --reload
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-The API should be available at http://localhost:8000.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### 2. Start the Frontend Server
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-You can start the frontend server using the provided script:
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-```bash
-cd frontend
-python serve.py
-```
+## Learn More
 
-This will start a local web server on port 3000 and open a browser automatically.
+To learn more about Next.js, take a look at the following resources:
 
-Alternatively, you can run any HTTP server in the frontend directory:
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-```bash
-cd frontend
-python -m http.server 3000
-```
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-Then visit http://localhost:3000 in your browser.
+## Deploy on Vercel
 
-## Usage
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-1. Upload your resume (PDF)
-2. Enter a job description
-3. Click "Customize Resume"
-4. View the customized resume details
-5. Download the generated PDF by clicking "Download PDF"
-
-## Test Data
-
-You can find a sample resume in the `samples` directory to test the application. 
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

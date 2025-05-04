@@ -1,6 +1,6 @@
 # Resume Customizer: AI-Powered Job Application Toolkit
 
-This project is an end-to-end solution for customizing resumes to match job descriptions using AI. It consists of a FastAPI backend and a simple web frontend. The backend leverages DeepSeek AI to parse and tailor resumes, and generates professional PDFs using LaTeX. The frontend provides an easy-to-use web interface for users to upload resumes, input job descriptions, and download customized resumes.
+This project is an end-to-end solution for customizing resumes to match job descriptions using AI. It consists of a FastAPI backend and a modern Next.js frontend. The backend leverages DeepSeek AI to parse and tailor resumes, and generates professional PDFs using LaTeX. The frontend provides an elegant, glassmorphism-styled interface for users to upload resumes, input job descriptions, and download customized resumes.
 
 ---
 
@@ -14,12 +14,15 @@ This project is an end-to-end solution for customizing resumes to match job desc
 │   ├── .env                   # Environment variables (API keys)
 │   ├── pdf_generator/         # PDF/LaTeX generation utilities
 │   └── ...
-├── frontend
-│   ├── index.html             # Main web UI
-│   ├── static/
-│   │   ├── css/style.css      # Styles
-│   │   └── js/app.js          # Frontend logic
-│   ├── serve.py               # Simple static file server
+├── frontend                   # Next.js frontend
+│   ├── src/                   # Source code
+│   │   ├── app/               # Next.js app router
+│   │   ├── components/        # React components
+│   │   ├── services/          # API services
+│   │   └── types/             # TypeScript type definitions
+│   ├── public/                # Static assets
+│   ├── package.json           # Node.js dependencies
+│   ├── tailwind.config.js     # Tailwind CSS configuration
 │   └── ...
 └── README.md                  # Project overview (this file)
 ```
@@ -30,7 +33,8 @@ This project is an end-to-end solution for customizing resumes to match job desc
 - **AI Resume Parsing:** Extracts structured data from resumes and job descriptions
 - **Resume Customization:** Uses DeepSeek AI to tailor resumes for specific jobs
 - **PDF Generation:** Converts customized resumes to professional PDFs via LaTeX
-- **Web Frontend:** Simple UI for uploading resumes, entering job descriptions, and downloading results
+- **Modern Frontend:** Elegant glassmorphism-styled UI with modern features
+- **Overleaf Integration:** Edit your LaTeX resume directly in Overleaf
 - **API Endpoints:** RESTful endpoints for all major operations
 
 ---
@@ -66,21 +70,25 @@ This project is an end-to-end solution for customizing resumes to match job desc
    ```bash
    cd frontend
    ```
-2. Start the frontend server:
+2. Install dependencies:
    ```bash
-   python serve.py
+   npm install
    ```
-   Or, use any static HTTP server (e.g., `python -m http.server 3000`).
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
 ## Usage
 1. Open the frontend in your browser.
 2. Upload your resume (PDF) and paste the job description.
-3. Click "Customize Resume".
-4. View the summary of changes and download the customized PDF.
+3. Click "Process Application".
+4. View the summary of changes and customized skills.
+5. Download the customized PDF or edit in Overleaf.
 
 ---
 
@@ -99,6 +107,12 @@ Interactive API docs:
 
 ---
 
+## Technologies Used
+- **Backend**: FastAPI, DeepSeek AI, LaTeX
+- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
+
+---
+
 ## Contributing
 Pull requests and issues are welcome! Please review the backend and frontend READMEs for more detailed component-specific information.
 
@@ -113,3 +127,5 @@ This project is for educational and demonstration purposes. See individual files
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [DeepSeek AI](https://deepseek.com/)
 - [LaTeX](https://www.latex-project.org/)
+- [Next.js](https://nextjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
