@@ -31,7 +31,9 @@ This project is an end-to-end solution for customizing resumes to match job desc
 
 ## Features
 - **AI Resume Parsing:** Extracts structured data from resumes and job descriptions
-- **Resume Customization:** Uses DeepSeek AI to tailor resumes for specific jobs
+- **Resume Customization:** Uses DeepSeek AI to tailor resumes for specific jobs using the STAR method
+- **STAR Method Implementation:** All experience and project descriptions follow the Situation, Task, Action, Result format
+- **No Summary Section:** Focuses on detailed achievements rather than general summaries
 - **PDF Generation:** Converts customized resumes to professional PDFs via LaTeX
 - **Modern Frontend:** Elegant glassmorphism-styled UI with modern features
 - **Overleaf Integration:** Edit your LaTeX resume directly in Overleaf
@@ -86,19 +88,29 @@ This project is an end-to-end solution for customizing resumes to match job desc
 ## Usage
 1. Open the frontend in your browser.
 2. Upload your resume (PDF) and paste the job description.
-3. Click "Process Application".
+3. Click "Customize Resume".
 4. View the summary of changes and customized skills.
 5. Download the customized PDF or edit in Overleaf.
 
 ---
 
+## STAR Method
+The application uses the STAR method for all experience and project descriptions:
+- **Situation:** Briefly describes the context or challenge
+- **Task:** Explains your specific responsibility or goal in that situation
+- **Action:** Details the specific steps you took, using action verbs
+- **Result:** Quantifies the positive outcome or impact of your actions
+
+This structured approach provides context and clearly demonstrates problem-solving skills and impact to potential employers.
+
+---
+
 ## API Overview
 
-- `POST /process_application` — Analyze a job description and resume, return tailored content
-- `POST /customize_resume` — Customize a resume for a job description and return PDF
-- `GET /download_pdf` — Download generated PDF
-- `GET /view_pdf` — View PDF in browser
-- `GET /view_latex` — View LaTeX source
+- `POST /customize-resume` — Customize a resume for a job description and return PDF
+- `GET /download-pdf` — Download generated PDF
+- `GET /view-pdf` — View PDF in browser
+- `GET /view-latex` — View LaTeX source
 - `GET /health` — Health check
 
 Interactive API docs:
