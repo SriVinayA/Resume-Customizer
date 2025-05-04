@@ -107,7 +107,7 @@ def parse_json_response(content: str) -> Dict[str, Any]:
             return json.loads(extracted_json)
         raise ValueError("Failed to parse AI response as JSON")
 
-def ai_request(prompt: str, system_prompt: str, json_response: bool = True) -> Dict[str, Any]:
+def call_ai_service(prompt: str, system_prompt: str, json_response: bool = True) -> Dict[str, Any]:
     """
     Make a request to the DeepSeek AI API.
     
@@ -153,7 +153,7 @@ def extract_text_from_pdf(pdf_file: bytes) -> str:
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_file))
         return "".join(page.extract_text() + "\n" for page in pdf_reader.pages)
 
-def ai_parse_text(text: str, parse_type: str) -> Dict[str, Any]:
+def analyze_document_with_ai(text: str, parse_type: str) -> Dict[str, Any]:
     """
     Parse text using DeepSeek AI with structured prompts.
     
@@ -174,7 +174,7 @@ def ai_parse_text(text: str, parse_type: str) -> Dict[str, Any]:
 - certifications: Array of objects with name, organization, and dates (if available)
 - achievements: Array of notable accomplishments, especially those with metrics or measurable results
 
-Look specifically for quantifiable achievements in both experience and projects sections that follow or could be adapted to the XYZ format ("Accomplished [X] as measured by [Y] by doing [Z]").
+Look specifically for quantifiable achievements in both experience and projects sections that follow or could be adapted to the STAR method (Situation, Task, Action, Result).
 
 Ensure you handle various formats and layouts. Return a structured JSON object that accurately captures all resume information.
 """,
@@ -198,13 +198,13 @@ Handle various job description formats and layouts. Return a structured JSON obj
     system_prompt = "You are an expert document parser specialized in resume and job description analysis."
     user_prompt = f"{prompts[parse_type]}\n\nDocument to parse:\n\n{text}"
     
-    return ai_request(user_prompt, system_prompt)
+    return call_ai_service(user_prompt, system_prompt)
 
 #------------------------------------------------------------
 # BUSINESS LOGIC FUNCTIONS
 #------------------------------------------------------------
 
-def parse_resume(text: str) -> Dict[str, Any]:
+def extract_resume_data(text: str) -> Dict[str, Any]:
     """
     Parse resume text using AI to extract structured information.
     
@@ -215,9 +215,9 @@ def parse_resume(text: str) -> Dict[str, Any]:
         Structured resume data
     """
     with handle_errors("Resume parsing"):
-        return ai_parse_text(text, "resume")
+        return analyze_document_with_ai(text, "resume")
 
-def parse_job_description(text: str) -> Dict[str, str]:
+def extract_job_description_data(text: str) -> Dict[str, str]:
     """
     Parse job description text using AI to extract key details.
     
@@ -228,7 +228,7 @@ def parse_job_description(text: str) -> Dict[str, str]:
         Dictionary of job description sections
     """
     try:
-        parsed_jd = ai_parse_text(text, "job_description")
+        parsed_jd = analyze_document_with_ai(text, "job_description")
         
         # Convert to format expected by downstream functions
         sections = {}
@@ -280,62 +280,7 @@ def parse_job_description(text: str) -> Dict[str, str]:
             logger.error(f"Fallback job description parsing failed: {str(e2)}")
             raise HTTPException(status_code=500, detail=f"Job description parsing failed: {str(e2)}")
 
-def generate_tailored_content(job_desc: Dict[str, str], resume: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Generate tailored content using DeepSeek API.
-    
-    Args:
-        job_desc: Parsed job description
-        resume: Parsed resume
-        
-    Returns:
-        Tailored content for job application
-    """
-    system_prompt = "You are an AI assistant specializing in job application analysis. IMPORTANT: Never include structural markers like '(X)', '(Y)', or '(Z)' in the final content - use these only as frameworks for creating the content."
-    
-    prompt = f"""
-    I need to create tailored content for a job application. I'll provide the job description and resume details.
-    
-    JOB DESCRIPTION:
-    {json.dumps(job_desc, indent=2)}
-    
-    RESUME:
-    {json.dumps(resume, indent=2)}
-    
-    Based on the above job description and resume, conduct a detailed analysis following these guidelines:
-
-    ### **Input Analysis Protocol**
-    1. **Resume Analysis**  
-       - Extract key achievements, skills, and metrics from the user's resume.  
-       - Identify relevant projects, internships, and work experience.
-       - Note technical skills/tools matching industry trends.
-
-    2. **Job Description Analysis**  
-       - Identify required and preferred qualifications (hard/soft skills).
-       - Identify core responsibilities and performance metrics.
-       - Identify recurring keywords/phrases.
-
-    3. **Keyword Mapping**  
-       - Create a mapping table to align user experience with job requirements, specifying match strength.
-
-    Please provide:
-    1. A comprehensive list of matching skills between the resume and job requirements
-    2. A detailed list of skill gaps that should be addressed
-    3. 3-5 talking points for a cover letter using the XYZ framework ("Accomplished [X] as measured by [Y] by doing [Z]")
-       IMPORTANT: Do not include the actual markers "(X)", "(Y)", "(Z)" in the final output.
-    4. A brief summary (max 100 words) evaluating the candidate's fit for this position
-    
-    Format your response as a structured JSON with the following fields:
-    - matching_skills (array of objects with "skill" and "evidence" properties)
-    - skill_gaps (array of objects with "skill" and "recommendation" properties)
-    - cover_letter_points (array of strings using XYZ formula)
-    - fit_summary (string)
-    - keyword_analysis (object with "total_keywords", "keywords_matched", "match_percentage" properties)
-    """
-    
-    return ai_request(prompt, system_prompt)
-
-def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) -> Dict[str, Any]:
+def tailor_resume_for_job(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) -> Dict[str, Any]:
     """
     Customize a resume based on a job description, following strict preservation and modification rules.
     
@@ -346,7 +291,7 @@ def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) 
     Returns:
         Customized resume content
     """
-    system_prompt = "You are an expert resume architect that customizes resumes to match job descriptions while following strict preservation and modification rules. IMPORTANT: Never include structural markers like '(X)', '(Y)', or '(Z)' in the final content - use these only as frameworks for creating the content. Also, use proper category names without underscores (e.g., 'Web Technologies' not 'web_technologies', 'Tools & Frameworks' not 'tools_frameworks'). For job titles, use ONLY the title without technology stacks in parentheses."
+    system_prompt = "You are an expert resume architect that customizes resumes to match job descriptions while following strict preservation and modification rules. IMPORTANT: Never include structural markers like '(Situation)', '(Task)', '(Action)', '(Result)' in the final content - use these only as frameworks for creating the content. Also, use proper category names without underscores (e.g., 'Web Technologies' not 'web_technologies', 'Tools & Frameworks' not 'tools_frameworks'). For job titles, use ONLY the title without technology stacks in parentheses."
     
     prompt = f"""
     I need to customize a resume to better match a job description while following strict preservation and modification rules.
@@ -357,7 +302,7 @@ def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) 
     JOB DESCRIPTION:
     {json.dumps(job_desc, indent=2)}
     
-    **Task:** Create a tailored resume by analyzing the user's provided resume and job description. Use Google's XYZ formula ("Accomplished [X] as measured by [Y] by doing [Z]") to craft accomplishment-driven statements. Ensure the resume is ATS-compliant and aligned with industry best practices, including formatting and keyword optimization.
+    **Task:** Create a tailored resume by analyzing the user's provided resume and job description. Use the STAR method (Situation, Task, Action, Result) to craft accomplishment-driven statements. Ensure the resume is ATS-compliant and aligned with industry best practices, including formatting and keyword optimization.
 
     ### **Input Analysis Protocol**
     1. **Resume Analysis**  
@@ -381,42 +326,41 @@ def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) 
     - Employment dates
     
     ### **Content Generation Rules**
-    1. **Professional Summary:**  
-       Write a concise summary using XYZ format to highlight the user's top achievements relevant to the job.  
-       *Template:*  
-       "Experienced [Role/Industry] professional achieving [X1], [X2], and [X3], delivering measurable results ([Y1], [Y2]) through [Z1], [Z2]."
-       IMPORTANT: Do NOT include framework markers like "(X)", "(Y)", "(Z)" in the final text.
-
-    2. **Experience Section:**  
+    1. **Experience Section:**  
        - IMPORTANT: For job titles, use ONLY the title itself. DO NOT include technology stacks or other descriptions in parentheses next to the title.
-       - Use XYZ bullets for each role:  
-         *Template:* "[Action Verb] [Task], achieving [Metric] via [Method/Tool], addressing [JD Keyword]."  
-         *Example:* "Streamlined onboarding process, reducing employee ramp-up time by 30% through implementation of an automated HRIS system."
-         IMPORTANT: Do NOT include framework markers like "(X)", "(Y)", "(Z)" in the final text.
+       - Use STAR method bullets for each role:  
+         *Situation:* Briefly describe the context or challenge.
+         *Task:* Explain your specific responsibility or goal in that situation.
+         *Action:* Detail the specific steps you took, using action verbs.
+         *Result:* Quantify the positive outcome or impact of your actions.
+         IMPORTANT: Do NOT include framework markers like "(Situation)", "(Task)", "(Action)", "(Result)" in the final text.
        - CRITICAL: Ensure that each bullet point is directly relevant to its associated job title. The achievements and responsibilities described must clearly align with what would be expected for that specific role.
        - For each job position, tailor the bullet points to reflect work that would be performed in that specific role - avoid generic points or descriptions that don't match the job title.
 
-    3. **Projects Section:**  
-       - Highlight projects using XYZ format:  
-         *Template:* "Developed a [Solution/Product] to address [Problem/Situation], achieving [Result/Impact]."  
-         IMPORTANT: Do NOT include framework markers like "(X)", "(Y)", "(Z)" in the final text.
+    2. **Projects Section:**  
+       - Highlight projects using STAR method:  
+         *Situation:* Briefly describe the context or challenge of the project.
+         *Task:* Explain your specific responsibility or goal in that project.
+         *Action:* Detail the specific steps you took, using action verbs.
+         *Result:* Quantify the positive outcome or impact of your actions.
+         IMPORTANT: Do NOT include framework markers like "(Situation)", "(Task)", "(Action)", "(Result)" in the final text.
          - Delete projects with <40% job description relevance
          - Modify kept projects to highlight job description keywords
          - Create 1-2 fictional projects if needed that use technologies from the job description
 
-    4. **Skills Section:**  
+    3. **Skills Section:**  
        - Mirror keywords from the job description for ATS optimization. Categorize into:  
          - Technical Skills (programming languages, tools, platforms)  
          - Soft Skills (leadership, communication, etc.)  
          IMPORTANT: Use proper category names without underscores. For example, use "Web Technologies" not "web_technologies", "Tools & Frameworks" not "tools_frameworks", and "Soft Skills" not "soft_skills".
 
-    5. **Job Title Adjustments:**
+    4. **Job Title Adjustments:**
        - Change job titles in experience section to better align with the target role in the job description
        - IMPORTANT: Display job titles as simple text without any technology stack or descriptions in parentheses
        - When adjusting job titles, ensure that the corresponding bullet points remain appropriate and relevant to the new title. If necessary, also adjust the bullet points to maintain consistency with the job title.
 
     ### **Validation Checklist**
-    - All bullets follow XYZ structure with quantifiable results (Y).  
+    - All bullets follow STAR structure with quantifiable results.  
     - 70%+ of job description keywords appear in the resume's first half.  
     - Metrics are specific and use percentages, dollar amounts, or time saved where possible.  
     - Formatting adheres to ATS standards.
@@ -438,9 +382,9 @@ def customize_resume(resume_sections: Dict[str, Any], job_desc: Dict[str, str]) 
     Make sure all object properties and array items are properly formatted with correct JSON syntax.
     """
     
-    return ai_request(prompt, system_prompt)
+    return call_ai_service(prompt, system_prompt)
 
-def generate_resume_filename(customized_resume: Dict[str, Any], job_description: Dict[str, str]) -> str:
+def create_resume_filename(customized_resume: Dict[str, Any], job_description: Dict[str, str]) -> str:
     """
     Generate a filename for the resume based on user name and job details.
     
@@ -536,40 +480,6 @@ async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
 
-@app.post("/process-application/", response_model=Dict[str, Any])
-async def process_application(
-    job_description_text: str = Form(..., description="Job description as text"),
-    resume: UploadFile = File(...),
-    client: OpenAI = Depends(get_client)
-):
-    """
-    Process a job application by analyzing the job description and resume.
-    
-    - **job_description_text**: The job description as text
-    - **resume**: A PDF file containing the applicant's resume
-    
-    Returns a JSON with tailored content and analysis.
-    """
-    with handle_errors("Application processing"):
-        # Parse job description
-        parsed_job_description = parse_job_description(job_description_text)
-        
-        # Read and parse resume
-        resume_content = await resume.read()
-        resume_text = extract_text_from_pdf(resume_content)
-        parsed_resume = parse_resume(resume_text)
-        
-        # Generate tailored content
-        tailored_content = generate_tailored_content(parsed_job_description, parsed_resume)
-        
-        # Return the results
-        return {
-            "success": True,
-            "tailored_content": tailored_content,
-            "parsed_job_description": parsed_job_description,
-            "parsed_resume": parsed_resume
-        }
-
 @app.post("/customize-resume/", response_model=Dict[str, Any])
 async def customize_resume_endpoint(
     job_description_text: str = Form(..., description="Job description as text"),
@@ -586,18 +496,18 @@ async def customize_resume_endpoint(
     """
     with handle_errors("Resume customization"):
         # Parse job description
-        parsed_job_description = parse_job_description(job_description_text)
+        parsed_job_description = extract_job_description_data(job_description_text)
         
         # Read and parse resume
         resume_content = await resume.read()
         resume_text = extract_text_from_pdf(resume_content)
-        parsed_resume = parse_resume(resume_text)
+        parsed_resume = extract_resume_data(resume_text)
         
         # Generate customized resume content
-        customized_resume = customize_resume(parsed_resume, parsed_job_description)
+        customized_resume = tailor_resume_for_job(parsed_resume, parsed_job_description)
         
         # Create filename for the resume
-        custom_filename = generate_resume_filename(customized_resume, parsed_job_description)
+        custom_filename = create_resume_filename(customized_resume, parsed_job_description)
         
         # Generate PDF from the customized resume data
         pdf_path = None
