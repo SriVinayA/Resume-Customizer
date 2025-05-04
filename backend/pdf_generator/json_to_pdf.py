@@ -547,7 +547,7 @@ def format_skills(skills):
     Returns:
         str: Formatted LaTeX for skills section
     """
-    skills_latex = "\\section{Technical Skills}\n\\begin{itemize}[leftmargin=0.15in, label={}]\n\\small{\\item{\n"
+    skills_latex = "\\section{Technical Skills}\n\\begin{itemize}[leftmargin=0pt, itemindent=0pt, labelwidth=0pt, labelsep=0pt, align=left, label={}]%\n\\small{\\item{\n"
     
     # Handle skills as a dictionary with categories (new format)
     if isinstance(skills, dict):
