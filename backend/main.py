@@ -321,9 +321,22 @@ def tailor_resume_for_job(resume_sections: Dict[str, Any], job_desc: Dict[str, s
        - Create a mapping table to align user experience with job requirements.
 
     ### **PRESERVATION RULES (DO NOT MODIFY THESE ELEMENTS)**:
-    - Education Section (degrees, institutions, dates)
-    - Company names in work experience
-    - Employment dates
+    - Education Section: Preserve exactly the structure provided by the user
+      - If the user included dates, preserve them exactly
+      - If the user omitted dates, do not add them
+      - If the user included locations, preserve them exactly
+      - If the user omitted locations, do not add them
+    
+    - Experience Section: Respect structural choices
+      - Company names in work experience must remain unchanged
+      - If employment dates are provided, preserve them exactly
+      - If employment dates are omitted, do not add them
+      - If locations are provided, preserve them exactly
+      - If locations are omitted, do not add them
+    
+    - Missing Data: NEVER invent or add missing data
+      - If certain information is not present (like dates or locations), do not invent it
+      - Respect the user's intentional omission of information
     
     ### **Content Generation Rules**
     1. **Experience Section:**  
@@ -366,13 +379,13 @@ def tailor_resume_for_job(resume_sections: Dict[str, Any], job_desc: Dict[str, s
     - Formatting adheres to ATS standards.
     - Job titles do NOT include technology stacks in parentheses.
     - Each job title and its associated bullet points are properly aligned and relevant to each other.
+    - Original structure regarding dates and locations is preserved (if they were omitted, they remain omitted).
     
     RESPONSE FORMAT:
     Generate a customized version of the resume that follows these rules. Return the result as a structured JSON with the following sections:
     - personal_info: Return as a structured object with fields for name, contact information, etc. (preserve from original)
-    - education: Return as an array of education objects, each with institution, degree, location, and dates (preserve according to rules). 
-      Do not modify the original education information provided, especially the institution names and dates.
-    - experience: Return as an array of experience objects, each with company, title (modified to match job), dates, and details array
+    - education: Return as an array of education objects, each with the same structure as the original. If dates or locations were omitted in the original, they should remain omitted.
+    - experience: Return as an array of experience objects, each with company, title (modified to match job), and the same structure for dates and locations as the original. If dates or locations were omitted in the original, they should remain omitted.
     - skills: Return as an object with categorized skills
     - projects: Return as an array of project objects
     - other: Any other sections, appropriately structured
