@@ -32,7 +32,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-MODEL_NAME = "deepseek-chat"
+MODEL_NAME = "gpt-4.1-nano"
 OUTPUT_DIR = "output"
 
 # Ensure output directory exists
@@ -40,10 +40,10 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Load environment variables once at startup
 load_dotenv(".env")
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-if not DEEPSEEK_API_KEY:
-    raise ValueError("DEEPSEEK_API_KEY must be set in the .env file")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY must be set in the .env file")
 
 #------------------------------------------------------------
 # CORE UTILITY FUNCTIONS
@@ -54,20 +54,19 @@ if not DEEPSEEK_API_KEY:
 def get_openai_client():
     """
     Get or create the OpenAI client with caching.
-    
+
     Returns:
         OpenAI client instance
     """
     try:
         # First try with simplified parameters
-        return OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+        return OpenAI(api_key=OPENAI_API_KEY)
     except TypeError:
         # If that fails, try with more compatible parameters
         import httpx
         return OpenAI(
-            api_key=DEEPSEEK_API_KEY, 
-            base_url="https://api.deepseek.com",
-            http_client=httpx.Client()
+            api_key=OPENAI_API_KEY,
+            http_client=httpx.Client() # Keep httpx if needed for your env proxy/setup
         )
 
 # Error handling context manager
@@ -651,3 +650,4 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) 
     
+
