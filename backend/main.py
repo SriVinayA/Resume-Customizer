@@ -363,7 +363,6 @@ def tailor_resume_for_job(resume_sections: Dict[str, Any], job_desc: Dict[str, s
          *Action:* Detail the specific steps you took, using action verbs.
          *Result:* Quantify the positive outcome or impact of your actions.
          IMPORTANT: Do NOT include framework markers like "(Situation)", "(Task)", "(Action)", "(Result)" in the final text.
-       - Delete projects with <40% job description relevance.
        - Modify kept projects to highlight job description keywords and align with the target role's requirements.
        - DO NOT create fictional projects. Ensure all listed projects are genuine experiences.
 

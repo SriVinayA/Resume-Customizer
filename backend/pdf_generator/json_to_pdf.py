@@ -33,8 +33,11 @@ def escape_latex_special_chars(text):
     Returns:
         str: Text with escaped LaTeX special characters
     """
+    if text is None:
+        return ""
+    
     if not isinstance(text, str):
-        return text
+        return str(text)
     
     # Process backslashes first to avoid double-escaping
     text = text.replace('\\', r'\textbackslash{}')
@@ -429,7 +432,8 @@ def format_education(education):
                 institution = entry.get('institution', '')
                 location = entry.get('location', '')
                 
-                if institution.endswith(location):
+                # Add null checks before using endswith
+                if institution and location and institution.endswith(location):
                     # Remove the location from the institution if it's duplicated
                     institution = institution.replace(location, '').strip()
                 
@@ -492,6 +496,12 @@ def format_education(education):
 
 def format_education_entry(institution, location, degree, dates):
     """Helper function to format a single education entry."""
+    # Ensure none of the values are "None" literals
+    institution = "" if institution is None else institution
+    location = "" if location is None else location
+    degree = "" if degree is None else degree
+    dates = "" if dates is None else dates
+    
     return f"""\\resumeSubheading
 {{{institution}}}{{{location}}}
 {{{degree}}}{{{dates}}}
@@ -515,6 +525,12 @@ def format_experience(experience):
             title = escape_latex_special_chars(job.get('title', ''))
             location = escape_latex_special_chars(job.get('location', ''))
             dates = escape_latex_special_chars(job.get('dates', ''))
+            
+            # Handle None values (although escape_latex_special_chars should handle this now)
+            company = "" if company is None else company
+            title = "" if title is None else title
+            location = "" if location is None else location
+            dates = "" if dates is None else dates
             
             exp_latex += f"""\\resumeSubheading
 {{{title}}}{{{dates}}}
@@ -553,19 +569,65 @@ def format_skills(skills):
     if isinstance(skills, dict):
         formatted_skills = []
         
+        # Special handling for "Technical Skills" with nested subcategories
+        if "Technical Skills" in skills:
+            tech_skills = skills["Technical Skills"]
+            
+            # Case 1: Technical Skills is a dictionary with subcategories
+            if isinstance(tech_skills, dict):
+                subcategory_parts = []
+                
+                # Process each subcategory
+                for subcategory, subcategory_skills in tech_skills.items():
+                    if isinstance(subcategory_skills, list) and subcategory_skills:
+                        subcategory_text = escape_latex_special_chars(subcategory)
+                        skills_text = ", ".join([escape_latex_special_chars(skill) for skill in subcategory_skills])
+                        subcategory_parts.append(f"\\textbf{{{subcategory_text}}}: {skills_text}")
+                
+                # Add the formatted subcategories directly (without "Technical Skills:" prefix)
+                formatted_skills.extend(subcategory_parts)
+            
+            # Case 2: Technical Skills is an array of skills
+            elif isinstance(tech_skills, list) and tech_skills:
+                skills_text = ", ".join([escape_latex_special_chars(skill) for skill in tech_skills])
+                formatted_skills.append(f"\\textbf{{Technical Skills}}: {skills_text}")
+            
+            # Remove "Technical Skills" so we don't process it again
+            skills_copy = dict(skills)
+            del skills_copy["Technical Skills"]
+        else:
+            skills_copy = skills
+        
         # Process each category and its skills
-        for category, skill_list in skills.items():
+        for category, skill_list in skills_copy.items():
+            # Skip if this is "Technical Skills" which we already handled
+            if category == "Technical Skills":
+                continue
+                
             # Format with the category in bold
             category_text = escape_latex_special_chars(category)
             
+            # Handle nested structure where skill_list is another dictionary
+            if isinstance(skill_list, dict):
+                # Create a formatted string for each subcategory
+                subcategory_parts = []
+                for subcategory, subcategory_skills in skill_list.items():
+                    if isinstance(subcategory_skills, list) and subcategory_skills:
+                        subcategory_text = escape_latex_special_chars(subcategory)
+                        skills_text = ", ".join([escape_latex_special_chars(skill) for skill in subcategory_skills])
+                        subcategory_parts.append(f"\\textbf{{{subcategory_text}}}: {skills_text}")
+                
+                # Join all subcategories with line breaks
+                if subcategory_parts:
+                    formatted_skills.append(f"\\textbf{{{category_text}}}: " + " \\\\\n".join(subcategory_parts))
             # Handle both list and string values for skills
-            if isinstance(skill_list, list) and skill_list:
+            elif isinstance(skill_list, list) and skill_list:
                 skills_text = ", ".join([escape_latex_special_chars(skill) for skill in skill_list])
+                formatted_skills.append(f"\\textbf{{{category_text}}}: {skills_text}")
             else:
                 # If it's a string, use it directly
                 skills_text = escape_latex_special_chars(str(skill_list))
-                
-            formatted_skills.append(f"\\textbf{{{category_text}}}: {skills_text}")
+                formatted_skills.append(f"\\textbf{{{category_text}}}: {skills_text}")
         
         # Join categories with line breaks
         skills_text = " \\\\\n".join(formatted_skills)
@@ -618,20 +680,47 @@ def format_projects(projects):
             
             # Handle technologies as either a string or an array, check technologies_used first
             technologies = project.get('technologies_used', project.get('technologies', ''))
-            if isinstance(technologies, list):
+            if technologies is None:
+                technologies_formatted = ""
+            elif isinstance(technologies, list):
                 # Join the technologies list with commas without square brackets
                 technologies_formatted = ', '.join([escape_latex_special_chars(tech) for tech in technologies])
             else:
                 # Use the technologies string as-is
                 technologies_formatted = escape_latex_special_chars(technologies)
             
-            proj_latex += f"""\\resumeProjectHeading
+            # Make sure technologies aren't too long - if they are, we'll break them to a new line
+            # Use empty second parameter for dates to avoid text being cut off
+            if technologies_formatted and len(technologies_formatted) > 40:  # Threshold for reasonable length
+                proj_latex += f"""\\resumeProjectHeading
+{{\\textbf{{{project_name}}}}}{{}}
+\\resumeItemListStart
+\\resumeItem{{\\emph{{Technologies:}} {technologies_formatted}}}
+"""
+            elif technologies_formatted:
+                # Short technology list can be included in the heading 
+                proj_latex += f"""\\resumeProjectHeading
 {{\\textbf{{{project_name}}} $|$ \\emph{{{technologies_formatted}}}}}{{}}
 \\resumeItemListStart
 """
+            else:
+                # No technologies provided
+                proj_latex += f"""\\resumeProjectHeading
+{{\\textbf{{{project_name}}}}}{{}}
+\\resumeItemListStart
+"""
             
-            # Add bullet points for project details
+            # Add bullet points for project details - check both 'details' and 'description' fields
             details = project.get('details', [])
+            
+            # Also check for 'description' field and convert to list if it's a string
+            description = project.get('description', '')
+            if description and not details:
+                if isinstance(description, str):
+                    details = [description]
+                elif isinstance(description, list):
+                    details = description
+            
             if isinstance(details, list) and details:
                 for detail in details:
                     detail_text = escape_latex_special_chars(detail)

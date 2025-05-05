@@ -119,21 +119,51 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseU
             <GlassCard className="p-6">
               <h3 className="text-xl font-bold mb-3">Skills</h3>
               <div className="space-y-4">
-                {Object.entries(result.customized_resume.skills).map(([category, skills]) => (
-                  <div key={category}>
-                    <h4 className="font-medium mb-2">{category}</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {skills.map((skill, idx) => (
-                        <span 
-                          key={idx} 
-                          className="glassmorphism bg-green-500/10 px-3 py-1 rounded-full"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                {/* Handle both flat and nested skills structures */}
+                {Object.entries(result.customized_resume.skills).map(([category, skills]) => {
+                  // Check if skills is an object (nested categories) or an array
+                  if (typeof skills === 'object' && !Array.isArray(skills)) {
+                    // Handle nested categories (like Technical Skills containing sub-categories)
+                    return (
+                      <div key={category} className="space-y-3">
+                        <h4 className="font-bold">{category}</h4>
+                        {Object.entries(skills).map(([subCategory, subSkills]) => (
+                          <div key={`${category}-${subCategory}`} className="ml-4">
+                            <h5 className="font-medium mb-2">{subCategory}</h5>
+                            <div className="flex flex-wrap gap-2">
+                              {Array.isArray(subSkills) && subSkills.map((skill, idx) => (
+                                <span 
+                                  key={idx} 
+                                  className="glassmorphism bg-green-500/10 px-3 py-1 rounded-full"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else if (Array.isArray(skills)) {
+                    // Handle flat categories (like Soft Skills)
+                    return (
+                      <div key={category}>
+                        <h4 className="font-medium mb-2">{category}</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {skills.map((skill, idx) => (
+                            <span 
+                              key={idx} 
+                              className="glassmorphism bg-green-500/10 px-3 py-1 rounded-full"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
               </div>
             </GlassCard>
           )}

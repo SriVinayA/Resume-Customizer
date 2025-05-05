@@ -27,7 +27,9 @@ export interface ParsedResume {
     [key: string]: string | string[] | undefined;
   }>;
   skills: {
-    [category: string]: string[];
+    [category: string]: string[] | {
+      [subCategory: string]: string[];
+    };
   };
   projects?: Array<{
     name: string;
