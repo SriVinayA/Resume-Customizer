@@ -132,17 +132,17 @@ def generate_resume_pdf(resume_data, template_path=None, output_filename=None, v
                     if not bucket_name:
                         logger.warning("S3_BUCKET_NAME environment variable not set. Skipping S3 upload.")
                     else:
-                        # Create S3 object name
+                        # Create S3 object name for PDF
                         s3_object_name = f"resumes/{output_filename}.pdf"
                         logger.debug(f"S3 object name: {s3_object_name}")
                         
-                        # Check if the file exists
+                        # Check if the PDF file exists
                         if not os.path.exists(str(pdf_path)):
                             logger.error(f"File to upload does not exist: {pdf_path}")
                         else:
                             logger.debug(f"File exists, size: {os.path.getsize(str(pdf_path))} bytes")
                             
-                            # Upload the file to S3
+                            # Upload the PDF file to S3
                             s3_url = upload_file_to_s3(
                                 str(pdf_path),
                                 bucket_name,
@@ -152,10 +152,26 @@ def generate_resume_pdf(resume_data, template_path=None, output_filename=None, v
                             
                             if s3_url:
                                 logger.info(f"Successfully uploaded PDF to S3: {s3_url}")
+                                
+                                # Also upload the LaTeX file to S3
+                                latex_object_name = f"latex/{output_filename}.tex"
+                                logger.debug(f"Uploading LaTeX file to S3: {latex_object_name}")
+                                
+                                latex_s3_url = upload_file_to_s3(
+                                    str(latex_path),
+                                    bucket_name,
+                                    latex_object_name,
+                                    content_type='text/plain'
+                                )
+                                
+                                if latex_s3_url:
+                                    logger.info(f"Successfully uploaded LaTeX to S3: {latex_s3_url}")
+                                else:
+                                    logger.error("Failed to upload LaTeX to S3")
                             else:
                                 logger.error("Failed to upload PDF to S3")
                 except Exception as e:
-                    logger.exception(f"Error uploading PDF to S3: {e}")
+                    logger.exception(f"Error uploading files to S3: {e}")
             else:
                 logger.debug("S3 upload skipped (upload_to_s3=False)")
             

@@ -7,6 +7,9 @@ import PyPDF2
 import io
 import json
 import re
+import base64
+import logging
+import tempfile
 from typing import Dict, List, Any, Optional, Callable
 from functools import lru_cache
 from dotenv import load_dotenv
@@ -14,7 +17,6 @@ from openai import OpenAI
 from pdf_generator.generate_pdf import generate_resume_pdf, save_resume_json
 from pdf_generator.s3_utils import generate_presigned_url, parse_s3_url, download_file_from_s3
 from datetime import datetime
-import logging
 from contextlib import contextmanager
 from pathlib import Path
 # Import prompts
