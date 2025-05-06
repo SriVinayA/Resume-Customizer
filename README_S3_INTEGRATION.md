@@ -53,7 +53,7 @@ The S3 integration consists of several key components:
 - S3v4 signature version is used for all S3 operations
 - URLs are generated with 1-hour expiration by default
 - Files are stored in organized paths:
-  - PDFs: `resumes/filename.pdf` 
+  - PDFs: `resumes/filename.pdf`
   - JSON: `json/filename.json`
 
 ## Troubleshooting
@@ -81,4 +81,4 @@ Potential future improvements:
 1. **CloudFront integration**: Add CDN for faster global access
 2. **Direct uploads**: Allow direct browser-to-S3 uploads for large files
 3. **Server-side encryption**: Implement encryption for sensitive files
-4. **Versioning**: Enable bucket versioning to maintain file history 
+4. **Versioning**: Enable bucket versioning to maintain file history
