@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse, StreamingResponse, Response
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import PyPDF2
@@ -12,9 +12,11 @@ from functools import lru_cache
 from dotenv import load_dotenv
 from openai import OpenAI
 from pdf_generator.generate_pdf import generate_resume_pdf, save_resume_json
+from pdf_generator.s3_utils import generate_presigned_url, parse_s3_url, download_file_from_s3
 from datetime import datetime
 import logging
 from contextlib import contextmanager
+from pathlib import Path
 # Import prompts
 from prompts import (
     DOCUMENT_PARSER_SYSTEM_PROMPT,
@@ -30,7 +32,7 @@ from prompts import (
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
@@ -421,12 +423,14 @@ async def customize_resume_endpoint(
         # Generate PDF from the customized resume data
         pdf_path = None
         json_path = None
+        s3_pdf_url = None
+        s3_json_url = None
         try:
             # Save JSON for reference
-            json_path = save_resume_json(customized_resume)
+            json_path, s3_json_url = save_resume_json(customized_resume)
             
             # Generate PDF with reduced log output, using custom filename if available
-            pdf_path = generate_resume_pdf(customized_resume, verbose=False, output_filename=custom_filename)
+            pdf_path, s3_pdf_url = generate_resume_pdf(customized_resume, verbose=False, output_filename=custom_filename)
         except Exception as e:
             # Log the error but continue, as the JSON response is still useful
             logger.error(f"Error generating PDF: {str(e)}")
@@ -437,94 +441,182 @@ async def customize_resume_endpoint(
             "customized_resume": customized_resume
         }
         
+        # Include paths and URLs in the response
         if pdf_path:
             response["pdf_path"] = pdf_path
             if custom_filename:
                 response["custom_filename"] = f"{custom_filename}.pdf"
+        if s3_pdf_url:
+            response["s3_pdf_url"] = s3_pdf_url
         if json_path:
             response["json_path"] = json_path
+        if s3_json_url:
+            response["s3_json_url"] = s3_json_url
             
         return response
 
-@app.get("/download-pdf/")
-async def download_pdf(path: str, custom_filename: Optional[str] = None):
-    """
-    Download a PDF file by path.
-    
-    Args:
-        path (str): Path to the PDF file
-        custom_filename (str, optional): Custom filename for the download
-        
-    Returns:
-        FileResponse: The PDF file as a downloadable attachment
-    """
-    if not os.path.isfile(path):
-        raise HTTPException(status_code=404, detail="PDF file not found")
-    
-    # Use provided custom filename or fallback to original filename
-    filename = custom_filename if custom_filename else os.path.basename(path)
-    
-    return FileResponse(
-        path=path,
-        filename=filename,
-        media_type="application/pdf"
-    )
-
 @app.get("/view-pdf/")
-async def view_pdf(path: str):
+async def view_pdf_endpoint(path: str = None, s3_url: str = None):
     """
-    View a PDF file by path.
+    Serve a generated PDF for viewing
     
     Args:
-        path (str): Path to the PDF file
+        path: The path to the generated PDF (relative to the output directory)
+        s3_url: The S3 URL of the PDF (in the format s3://bucket-name/object-name)
         
     Returns:
-        FileResponse: The PDF file for viewing in the browser
+        The PDF file as a streaming response or a redirect to a presigned URL
     """
-    if not os.path.isfile(path):
-        raise HTTPException(status_code=404, detail="PDF file not found")
+    if s3_url:
+        # Parse S3 URL and generate a presigned URL for direct access
+        bucket_name, object_name = parse_s3_url(s3_url)
+        if not bucket_name or not object_name:
+            raise HTTPException(status_code=400, detail="Invalid S3 URL format")
+        
+        # Generate presigned URL with 1 hour expiry
+        logger.debug(f"Generating presigned URL for viewing: {bucket_name}/{object_name}")
+        presigned_url = generate_presigned_url(bucket_name, object_name, expiration=3600)
+        if not presigned_url:
+            raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
+        
+        # Redirect to presigned URL
+        logger.info(f"Redirecting to presigned URL for viewing: {presigned_url}")
+        return RedirectResponse(url=presigned_url, status_code=307)
     
-    return FileResponse(
-        path=path,
-        media_type="application/pdf"
-    )
+    elif path:
+        # Get full path to PDF
+        pdf_path = Path(str(OUTPUT_DIR)) / path
+        
+        if not pdf_path.exists():
+            raise HTTPException(status_code=404, detail="PDF not found")
+        
+        # Return PDF for viewing in browser
+        logger.info(f"Serving PDF for viewing: {pdf_path}")
+        return FileResponse(pdf_path, media_type="application/pdf")
+    
+    else:
+        raise HTTPException(status_code=400, detail="Either path or s3_url is required")
+
+@app.get("/download-pdf/")
+async def download_pdf_endpoint(path: str = None, s3_url: str = None):
+    """
+    Download a generated PDF
+    
+    Args:
+        path: The path to the generated PDF (relative to the output directory)
+        s3_url: The S3 URL of the PDF (in the format s3://bucket-name/object-name)
+        
+    Returns:
+        The PDF file as an attachment or a redirect to a presigned URL for download
+    """
+    if s3_url:
+        # Parse S3 URL and generate a presigned URL for direct download
+        bucket_name, object_name = parse_s3_url(s3_url)
+        if not bucket_name or not object_name:
+            raise HTTPException(status_code=400, detail="Invalid S3 URL format")
+        
+        # Generate presigned URL with download flag and 1 hour expiry
+        logger.debug(f"Generating presigned URL for download: {bucket_name}/{object_name}")
+        presigned_url = generate_presigned_url(bucket_name, object_name, expiration=3600, download=True)
+        if not presigned_url:
+            raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
+        
+        # Redirect to presigned URL
+        logger.info(f"Redirecting to presigned URL for download: {presigned_url}")
+        return RedirectResponse(url=presigned_url, status_code=307)
+    
+    elif path:
+        # Get full path to PDF
+        pdf_path = Path(str(OUTPUT_DIR)) / path
+        
+        if not pdf_path.exists():
+            raise HTTPException(status_code=404, detail="PDF not found")
+        
+        # Get filename from path
+        filename = pdf_path.name
+        
+        # Return PDF as attachment for download
+        logger.info(f"Serving PDF for download: {pdf_path}")
+        headers = {"Content-Disposition": f"attachment; filename={filename}"}
+        return FileResponse(pdf_path, headers=headers, media_type="application/pdf")
+    
+    else:
+        raise HTTPException(status_code=400, detail="Either path or s3_url is required")
 
 @app.get("/view-latex/")
-async def view_latex(path: str):
+async def view_latex(path: str = None, s3_url: str = None):
     """
-    Get the content of a LaTeX file by path.
+    View the LaTeX source for a PDF file.
     
     Args:
-        path (str): Path to the LaTeX file
+        path (str, optional): Path to the PDF file
+        s3_url (str, optional): S3 URL of the PDF file (s3://bucket-name/object-name)
         
     Returns:
-        Response: The LaTeX file content as text
+        Response: The LaTeX source code as plain text
     """
-    with handle_errors("LaTeX file reading", error_status=404):
-        # Check for invalid path
-        if not path:
-            raise ValueError("Invalid path: Path cannot be empty")
+    try:
+        latex_path = None
+        temp_file = None
+        
+        # If S3 URL is provided
+        if s3_url:
+            bucket_name, object_name = parse_s3_url(s3_url)
+            if not bucket_name or not object_name:
+                raise HTTPException(status_code=400, detail="Invalid S3 URL format")
             
-        # Convert from PDF path to LaTeX path if needed
-        if path.endswith('.pdf'):
-            # Extract the filename without extension
-            filename = os.path.basename(path).replace('.pdf', '')
-            # Construct the correct path to the LaTeX file in the latex directory
-            latex_dir = os.path.join(os.path.dirname(os.path.dirname(path)), 'latex')
-            path = os.path.join(latex_dir, f"{filename}.tex")
+            # Extract filename without extension
+            pdf_filename = os.path.basename(object_name)
+            base_name = os.path.splitext(pdf_filename)[0]
+            
+            # Create corresponding LaTeX filename
+            latex_object_name = f"latex/{base_name}.tex"
+            
+            # Download the LaTeX file temporarily
+            temp_dir = tempfile.mkdtemp()
+            temp_file = os.path.join(temp_dir, f"{base_name}.tex")
+            
+            # Download from S3
+            success = download_file_from_s3(bucket_name, latex_object_name, temp_file)
+            if success:
+                latex_path = temp_file
+            else:
+                raise HTTPException(status_code=404, detail="LaTeX file not found in S3")
         
-        logger.info(f"Looking for LaTeX file at: {path}")
+        # If local PDF path is provided
+        elif path:
+            if not os.path.isfile(path):
+                raise HTTPException(status_code=404, detail="PDF file not found")
+            
+            # Get directory and base name
+            pdf_dir = os.path.dirname(path)
+            pdf_filename = os.path.basename(path)
+            base_name = os.path.splitext(pdf_filename)[0]
+            
+            # Create LaTeX path - replace 'pdfs' with 'latex' in the directory path
+            latex_dir = pdf_dir.replace('pdfs', 'latex')
+            latex_path = os.path.join(latex_dir, f"{base_name}.tex")
+            
+            if not os.path.isfile(latex_path):
+                raise HTTPException(status_code=404, detail="LaTeX file not found")
         
-        if not os.path.isfile(path):
-            raise FileNotFoundError(f"LaTeX file not found at {path}")
+        # Neither path nor S3 URL provided
+        else:
+            raise HTTPException(status_code=400, detail="Either path or s3_url must be provided")
         
-        with open(path, 'r', encoding='utf-8') as file:
-            content = file.read()
+        # Read and return the LaTeX content
+        with open(latex_path, 'r', encoding='utf-8') as f:
+            latex_content = f.read()
         
-        return Response(
-            content=content,
-            media_type="application/x-tex"
-        )
+        # Clean up temporary file if needed
+        if temp_file and os.path.exists(temp_file):
+            os.remove(temp_file)
+        
+        return Response(content=latex_content, media_type="text/plain")
+        
+    except Exception as e:
+        logger.error(f"Error accessing LaTeX: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error accessing LaTeX: {str(e)}")
 
 # Mount static files directories for output
 app.mount("/static-files", StaticFiles(directory=OUTPUT_DIR), name="static-files")

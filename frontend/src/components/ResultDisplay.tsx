@@ -13,23 +13,40 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseU
   if (!result) return null;
 
   const handleDownloadPdf = () => {
-    if (result.pdf_path) {
+    if (result.s3_pdf_url) {
+      // Use S3 URL if available
+      window.open(`${apiBaseUrl}/download-pdf/?s3_url=${encodeURIComponent(result.s3_pdf_url)}`, '_blank');
+    } else if (result.pdf_path) {
+      // Fall back to local path
       window.open(`${apiBaseUrl}/download-pdf/?path=${result.pdf_path}`, '_blank');
     }
   };
 
   const handleViewPdf = () => {
-    if (result.pdf_path) {
+    if (result.s3_pdf_url) {
+      // Use S3 URL if available
+      window.open(`${apiBaseUrl}/view-pdf/?s3_url=${encodeURIComponent(result.s3_pdf_url)}`, '_blank');
+    } else if (result.pdf_path) {
+      // Fall back to local path
       window.open(`${apiBaseUrl}/view-pdf/?path=${result.pdf_path}`, '_blank');
     }
   };
 
   const handleEditInOverleaf = async () => {
-    if (!result.pdf_path) return;
+    if (!result.s3_pdf_url && !result.pdf_path) return;
 
     try {
+      let latexUrl = '';
+      
+      // Determine which URL to use for LaTeX
+      if (result.s3_pdf_url) {
+        latexUrl = `${apiBaseUrl}/view-latex/?s3_url=${encodeURIComponent(result.s3_pdf_url)}`;
+      } else if (result.pdf_path) {
+        latexUrl = `${apiBaseUrl}/view-latex/?path=${result.pdf_path}`;
+      }
+
       // Fetch the LaTeX content
-      const response = await fetch(`${apiBaseUrl}/view-latex/?path=${result.pdf_path}`);
+      const response = await fetch(latexUrl);
       
       if (!response.ok) {
         throw new Error('Failed to fetch LaTeX content');

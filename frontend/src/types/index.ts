@@ -61,7 +61,9 @@ export interface CustomizeResumeResponse {
   success: boolean;
   customized_resume?: ParsedResume;
   pdf_path?: string;
+  s3_pdf_url?: string;
   json_path?: string;
+  s3_json_url?: string;
   modifications_summary?: string;
   [key: string]: unknown | boolean | string | ParsedResume | undefined;
 } 
