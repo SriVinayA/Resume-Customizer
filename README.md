@@ -1,6 +1,6 @@
 # Resume Customizer: AI-Powered Job Application Toolkit
 
-This project is an end-to-end solution for customizing resumes to match job descriptions using AI. It consists of a FastAPI backend and a modern Next.js frontend. The backend leverages DeepSeek AI to parse and tailor resumes, and generates professional PDFs using LaTeX. The frontend provides an elegant, glassmorphism-styled interface for users to upload resumes, input job descriptions, and download customized resumes.
+This project is an end-to-end solution for customizing resumes to match job descriptions using AI. It consists of a FastAPI backend and a modern Next.js frontend. The backend leverages OpenAI to parse and tailor resumes, and generates professional PDFs using LaTeX. The frontend provides an elegant, glassmorphism-styled interface for users to upload resumes, input job descriptions, and download customized resumes.
 
 ---
 
@@ -13,6 +13,7 @@ This project is an end-to-end solution for customizing resumes to match job desc
 │   ├── requirements.txt       # Python dependencies
 │   ├── .env                   # Environment variables (API keys)
 │   ├── pdf_generator/         # PDF/LaTeX generation utilities
+│   │   ├── s3_utils.py        # AWS S3 integration utilities
 │   └── ...
 ├── frontend                   # Next.js frontend
 │   ├── src/                   # Source code
@@ -25,16 +26,18 @@ This project is an end-to-end solution for customizing resumes to match job desc
 │   ├── tailwind.config.js     # Tailwind CSS configuration
 │   └── ...
 └── README.md                  # Project overview (this file)
+└── README_S3_INTEGRATION.md   # AWS S3 integration documentation
 ```
 
 ---
 
 ## Features
 - **AI Resume Parsing:** Extracts structured data from resumes and job descriptions
-- **Resume Customization:** Uses DeepSeek AI to tailor resumes for specific jobs using the STAR method
+- **Resume Customization:** Uses OpenAI to tailor resumes for specific jobs using the STAR method
 - **STAR Method Implementation:** All experience and project descriptions follow the Situation, Task, Action, Result format
 - **No Summary Section:** Focuses on detailed achievements rather than general summaries
 - **PDF Generation:** Converts customized resumes to professional PDFs via LaTeX
+- **AWS S3 Integration:** Stores and serves PDFs from scalable cloud storage
 - **Modern Frontend:** Elegant glassmorphism-styled UI with modern features
 - **Overleaf Integration:** Edit your LaTeX resume directly in Overleaf
 - **API Endpoints:** RESTful endpoints for all major operations
@@ -52,16 +55,26 @@ This project is an end-to-end solution for customizing resumes to match job desc
    ```bash
    pip install -r requirements.txt
    ```
-3. Set up your `.env` file with your DeepSeek API key:
+3. Set up your `.env` file with your OpenAI API key and AWS credentials:
    ```
-   DEEPSEEK_API_KEY=your-api-key-here
+   OPENAI_API_KEY=your-api-key-here
+   
+   # AWS S3 Configuration (optional but recommended)
+   AWS_ACCESS_KEY_ID=your-access-key-here
+   AWS_SECRET_ACCESS_KEY=your-secret-key-here
+   AWS_REGION=us-east-2  # Or your preferred region
+   S3_BUCKET_NAME=your-bucket-name
    ```
 4. Install LaTeX (required for PDF generation):
    - **macOS:** `brew install --cask mactex`
    - **Ubuntu/Debian:** `sudo apt-get install texlive-full`
    - **Windows:** Download and install [MiKTeX](https://miktex.org/download)
 
-5. Start the backend server:
+5. (Optional) Set up AWS S3 bucket for PDF storage:
+   - Create an S3 bucket in your AWS account
+   - Ensure the IAM user has appropriate permissions (see README_S3_INTEGRATION.md)
+
+6. Start the backend server:
    ```bash
    uvicorn main:app --reload
    ```
@@ -91,6 +104,7 @@ This project is an end-to-end solution for customizing resumes to match job desc
 3. Click "Customize Resume".
 4. View the summary of changes and customized skills.
 5. Download the customized PDF or edit in Overleaf.
+6. If AWS S3 is configured, PDFs will be stored in the cloud for improved scalability and availability.
 
 ---
 
@@ -105,11 +119,22 @@ This structured approach provides context and clearly demonstrates problem-solvi
 
 ---
 
+## AWS S3 Integration
+
+The application can be configured to store generated PDFs and JSON files in AWS S3, providing:
+- Scalable storage independent of server disk space
+- Better availability and durability for files
+- Faster access via direct S3 presigned URLs
+
+See [README_S3_INTEGRATION.md](./README_S3_INTEGRATION.md) for detailed setup instructions.
+
+---
+
 ## API Overview
 
 - `POST /customize-resume` — Customize a resume for a job description and return PDF
-- `GET /download-pdf` — Download generated PDF
-- `GET /view-pdf` — View PDF in browser
+- `GET /download-pdf` — Download generated PDF (local or S3)
+- `GET /view-pdf` — View PDF in browser (local or S3)
 - `GET /view-latex` — View LaTeX source
 - `GET /health` — Health check
 
@@ -120,7 +145,7 @@ Interactive API docs:
 ---
 
 ## Technologies Used
-- **Backend**: FastAPI, DeepSeek AI, LaTeX
+- **Backend**: FastAPI, OpenAI, LaTeX, AWS S3
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS
 
 ---
@@ -137,7 +162,8 @@ This project is for educational and demonstration purposes. See individual files
 
 ## Credits
 - [FastAPI](https://fastapi.tiangolo.com/)
-- [DeepSeek AI](https://deepseek.com/)
+- [OpenAI](https://openai.com/)
 - [LaTeX](https://www.latex-project.org/)
 - [Next.js](https://nextjs.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
+- [AWS S3](https://aws.amazon.com/s3/)
