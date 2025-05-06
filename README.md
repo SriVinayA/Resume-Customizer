@@ -66,7 +66,7 @@ This project is an end-to-end solution for customizing resumes to match job desc
    S3_BUCKET_NAME=your-bucket-name
    ```
 4. Install LaTeX (required for PDF generation):
-   - **macOS:** `brew install --cask mactex`
+   - **macOS:** `brew install texlive` or download from [TexLive](https://www.tug.org/texlive/acquire-netinstall.html)
    - **Ubuntu/Debian:** `sudo apt-get install texlive-full`
    - **Windows:** Download and install [MiKTeX](https://miktex.org/download)
 
