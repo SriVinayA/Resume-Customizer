@@ -49,28 +49,19 @@ RESUME:
 JOB DESCRIPTION:
 {job_description_json}
 
-**Task:** Create a tailored resume by analyzing the user's provided resume and job description. Use the STAR method (Situation, Task, Action, Result) to craft accomplishment-driven statements. Ensure the resume is ATS-compliant and aligned with industry best practices, including formatting and keyword optimization.
+**Task:** Create a tailored resume by customizing the provided resume JSON to better match the job description JSON. Use the STAR method (Situation, Task, Action, Result) to craft accomplishment-driven statements. Ensure the resume is ATS-compliant and aligned with industry best practices, including formatting and keyword optimization.
+
+**PRIORITIZATION (CRITICAL):**
+1. Accuracy and truthfulness above all - never fabricate experience or qualifications
+2. Preserve all structural elements as specified in the preservation rules
+3. Relevance to the job description by naturally integrating keywords from the job description JSON
+4. Highlight quantifiable achievements using the STAR method based on the candidate's actual experience in the resume JSON
+5. Optimize for ATS by using exact keyword matches where natural and appropriate
 
 ### **Ethical Guidelines (CRITICAL)**:
 - NEVER engage in "keyword stuffing" (excessive, unnatural repetition of keywords). Focus on relevance and quality.
 - NEVER use hidden text (e.g., white font) or other deceptive tactics to manipulate ATS scoring. This is easily detectable and will lead to disqualification.
 - Ensure all content is truthful and accurately reflects the candidate's experience and skills. Do not fabricate or exaggerate qualifications.
-
-### **Input Analysis Protocol**
-1. **Resume Analysis**
-   - Extract:
-     - Key achievements, skills (hard & soft), and metrics from the user's resume.
-     - Relevant projects, internships, and work experience.
-     - Technical skills/tools matching industry trends.
-
-2. **Job Description Analysis**
-   - Identify:
-     - Required and preferred qualifications (hard/soft skills).
-     - Core responsibilities and performance metrics.
-     - Recurring keywords/phrases (indicating importance).
-
-3. **Keyword Mapping**
-   - Create a mapping table to align user experience with job requirements.
 
 ### **PRESERVATION RULES (DO NOT MODIFY THESE ELEMENTS)**:
 - Education Section: Preserve exactly the structure provided by the user.
@@ -93,14 +84,8 @@ JOB DESCRIPTION:
 ### **Content Generation Rules**
 1. **Experience Section:**
    - IMPORTANT: For job titles, use ONLY the title itself. DO NOT include technology stacks or other descriptions in parentheses next to the title.
-   - Use STAR method bullets for each role:
-     *Situation:* Briefly describe the context or challenge.
-     *Task:* Explain your specific responsibility or goal in that situation.
-     *Action:* Detail the specific steps you took, using strong action verbs.
-     *Result:* Quantify the positive outcome or impact of your actions whenever possible.
-     IMPORTANT: Do NOT include framework markers like "(Situation)", "(Task)", "(Action)", "(Result)" in the final text.
+   - Rewrite the experience bullet points from the input resume JSON using the STAR method. Ensure each rewritten bullet point accurately reflects the candidate's original achievement while integrating relevant keywords from the job description and quantifying results where possible. Focus on highlighting aspects of the candidate's *actual* experience that match the job requirements.
    - CRITICAL: Ensure that each bullet point is directly relevant to its associated job title. The achievements and responsibilities described must clearly align with what would be expected for that specific role.
-   - For each job position, tailor the bullet points to reflect work that would be performed in that specific role - avoid generic points or descriptions that don't match the job title.
    - Integrate keywords naturally within achievement statements and descriptions, providing context and demonstrating the skill in action. Avoid simply listing keywords without context.
    - Where accurate and natural, use the *exact keyword phrasing* found in the job description, as some ATS systems may not recognize synonyms or variations.
 
@@ -115,10 +100,32 @@ JOB DESCRIPTION:
    - DO NOT create fictional projects. Ensure all listed projects are genuine experiences.
 
 3. **Skills Section:**
-   - Mirror keywords from the job description for ATS optimization. Categorize into:
-     - Technical Skills (programming languages, tools, platforms)
-     - Soft Skills (leadership, communication, etc.)
-   - IMPORTANT: Use proper category names without underscores. For example, use "Web Technologies" not "web_technologies", "Tools & Frameworks" not "tools_frameworks", and "Soft Skills" not "soft_skills".
+   - Analyze all skills present in the input `resume_json` and the keywords/requirements listed in the `job_description_json`.
+   - Organize technical skills into meaningful categories that align with the job description. Examples of technical skill categories include:
+     - Programming Languages (e.g., Python, Java, C++, Go)
+     - Databases (e.g., PostgreSQL, MySQL, MongoDB, Redis)
+     - Cloud Services (e.g., AWS, Azure, GCP)
+     - DevOps Tools (e.g., Docker, Kubernetes, Terraform)
+     - Frameworks (e.g., React, Django, Spring)
+     - Data Tools (e.g., PowerBI, Tableau, PySpark)
+   - **CRITICAL: Each technical skill should appear in ONLY ONE category to avoid duplication.**
+   - Add a final "Soft Skills" category that includes interpersonal and professional attributes like:
+     - Communication
+     - Leadership
+     - Problem-solving
+     - Teamwork
+     - Analytical Thinking
+   - Ensure skills relevant to the job description are prominently included.
+   - **Output Format:** The final skills section in the customized resume should be formatted as follows:
+     ```
+     [Technical Category 1]: [skill1, skill2, skill3, ...]
+     [Technical Category 2]: [skill4, skill5, skill6, ...]
+     ...
+     Soft Skills: [soft skill1, soft skill2, soft skill3, ...]
+     ```
+   - Technical skills like "Data Analysis", "System Observability", "Performance Optimization", and "Automation" should be categorized as technical skills, not soft skills.
+   - Use clear, industry-standard category names for technical skills (e.g., "Programming Languages", "Cloud & Infrastructure", "Databases").
+   - **CRITICAL: Remove duplicate entries within each list.**
 
 4. **Job Title Adjustments:**
    - Change job titles in the experience section to better align with the target role *only if* the adjusted title accurately reflects the core responsibilities and seniority level of the original role. DO NOT inflate titles or misrepresent experience level.
@@ -144,7 +151,7 @@ Generate a customized version of the resume that follows these rules. Return the
 - personal_info: Return as a structured object with fields for name, contact information, etc. (preserve from original).
 - education: Return as an array of education objects, each with the same structure as the original. If dates or locations were omitted in the original, they should remain omitted.
 - experience: Return as an array of experience objects, each with company, title (potentially modified to match job, if accurate), and the same structure for dates and locations as the original. If dates or locations were omitted in the original, they should remain omitted. Include tailored, quantified bullet points using STAR method.
-- skills: Return as an object with categorized skills (e.g., "Technical Skills", "Soft Skills") reflecting keywords from the job description.
+- skills: Return as an object with categorized technical skills followed by soft skills. Each technical skill category should be a key with an array of skills as its value. Include a "Soft Skills" key with an array of soft skills.
 - projects: Return as an array of project objects, tailored and potentially filtered based on relevance.
 - other: Any other sections, appropriately structured.
 
