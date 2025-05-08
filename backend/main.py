@@ -218,15 +218,30 @@ def extract_job_description_data(text: str) -> Dict[str, str]:
         # Convert to format expected by downstream functions
         sections = {}
         
-        # Create overview section with job title and company
+        # Extract and clean company name if available
+        if "company" in parsed_jd:
+            company = parsed_jd["company"].strip()
+            # Simple cleaning to handle common issues in company names
+            company = re.sub(r'\s*\([^)]*\)$', '', company)  # Remove trailing parentheticals
+            company = re.sub(r'[,;].*$', '', company)  # Remove trailing commas or text after commas
+            sections["company"] = company
+            logger.debug(f"Extracted and cleaned company name: '{company}'")
+        
+        # Create separate entries for other key fields
+        if "job_title" in parsed_jd:
+            sections["job_title"] = parsed_jd["job_title"]
+        if "location" in parsed_jd:
+            sections["location"] = parsed_jd["location"]
+            
+        # Create overview section with job title and company (with clear separation)
         overview_parts = []
         if "job_title" in parsed_jd:
             overview_parts.append(f"Position: {parsed_jd['job_title']}")
-        if "company" in parsed_jd:
-            overview_parts.append(f"Company: {parsed_jd['company']}")
+        if "company" in parsed_jd and "company" in sections:
+            overview_parts.append(f"Company: {sections['company']}")  # Use cleaned company name
         if "location" in parsed_jd:
             overview_parts.append(f"Location: {parsed_jd['location']}")
-        sections["overview"] = " ".join(overview_parts)
+        sections["overview"] = "\n".join(overview_parts)  # Use newlines for clear separation
         
         # Add other sections
         for key in ["responsibilities", "requirements", "qualifications", "preferred_skills"]:
@@ -299,7 +314,11 @@ def tailor_resume_for_job(resume_sections: Dict[str, Any], job_desc: Dict[str, s
 
 def create_resume_filename(customized_resume: Dict[str, Any], job_description: Dict[str, str]) -> str:
     """
-    Generate a filename for the resume based on user name and job details.
+    Generate a filename for the resume based on user name and company name.
+    
+    Format:
+    - name-companyname (if company name is found)
+    - name-mmdd-hhmm (if company name is not found)
     
     Args:
         customized_resume: The customized resume data
@@ -314,50 +333,78 @@ def create_resume_filename(customized_resume: Dict[str, Any], job_description: D
             customized_resume.get('basics', {}).get('name') or
             customized_resume.get('personal_info', {}).get('name', 'Your Name')
         )
-            
-        # Extract job and company details
+        
+        # Log the available job description fields for debugging
+        logger.debug(f"Job description keys: {job_description.keys()}")
+        
+        # Extract company details from multiple possible places
         company_name = job_description.get('company', '').strip()
-        job_title = job_description.get('job_title', '').strip()
+        logger.debug(f"Initial company name: '{company_name}'")
 
         # Extract from overview if not directly available
-        if 'overview' in job_description:
+        if not company_name and 'overview' in job_description:
             overview = job_description.get('overview', '')
-            if not company_name:
-                company_match = re.search(r'Company:\s*([^,\n]+)', overview)
-                if company_match:
-                    company_name = company_match.group(1).strip()
-                    
-            if not job_title:
-                position_match = re.search(r'Position:\s*([^,\n]+)', overview)
-                if position_match:
-                    job_title = position_match.group(1).strip()
+            logger.debug(f"Extracting company from overview: '{overview}'")
+            
+            # Look for "Company: X" pattern
+            company_match = re.search(r'Company:\s*([^,\n]+)', overview)
+            if company_match:
+                company_name = company_match.group(1).strip()
+                logger.debug(f"Extracted company name from overview: '{company_name}'")
+                
+                # Clean up common company name issues
+                if "location" in company_name.lower():
+                    # Handle case where "Location" got mixed with company name
+                    company_parts = company_name.split("Location")
+                    company_name = company_parts[0].strip()
+                    logger.debug(f"Removed location from company name: '{company_name}'")
 
         # Clean and validate components
         def clean_text(text):
-            return re.sub(r'[^\w]', '', text).lower() if text and text.lower() not in ['', 'notspecified', 'your name'] else ''
+            # First handle any trailing parenthetical information
+            text = re.sub(r'\s*\([^)]*\)$', '', text)
+            
+            # Then handle any trailing commas or common separators
+            text = re.sub(r'[,;].*$', '', text)
+            
+            # Focus on the core company name by removing suffixes like Inc, LLC, etc.
+            text = re.sub(r'\s+(Inc\.?|LLC|Ltd\.?|Limited|Corp\.?|Corporation)$', '', text, flags=re.IGNORECASE)
+            
+            # More aggressive cleaning to remove non-alphanumeric characters
+            # for the filename itself
+            clean = re.sub(r'[^\w]', '', text)
+            
+            # Ensure we don't have empty string or placeholder values
+            if not clean or clean.lower() in ['notspecified', 'yourname']:
+                return ''
+                
+            return clean.lower()
 
         clean_name = clean_text(person_name)
         clean_company = clean_text(company_name)
-        clean_job = clean_text(job_title)
+        
+        logger.debug(f"Final cleaned name: '{clean_name}', company: '{clean_company}'")
 
         # Generate filename based on available components
         if clean_name and clean_company:
-            return f"{clean_name}-{clean_company}"
-        elif clean_name and clean_job:
-            return f"{clean_name}-{clean_job}"
-        elif clean_name:
-            return f"{clean_name}-resume"
-        elif clean_company:
-            return f"resume-for-{clean_company}"
-        elif clean_job:
-            return f"resume-{clean_job}"
+            filename = f"{clean_name}-{clean_company}"
+            logger.debug(f"Generated filename with company: {filename}")
+            return filename
         else:
-            timestamp = datetime.now().strftime("%m%d%Y")
-            return f"resume-{timestamp}"
+            # Use name-date-time format if company name is not available
+            timestamp = datetime.now().strftime("%m%d-%H%M")
+            if clean_name:
+                filename = f"{clean_name}-{timestamp}"
+                logger.debug(f"Generated filename with timestamp: {filename}")
+                return filename
+            else:
+                filename = f"resume-{timestamp}"
+                logger.debug(f"Generated generic filename: {filename}")
+                return filename
             
     except Exception as e:
         logger.warning(f"Error creating custom filename: {e}")
-        timestamp = datetime.now().strftime("%m%d%Y_%H%M%S")
+        timestamp = datetime.now().strftime("%m%d-%H%M")
         return f"resume-{timestamp}"
 
 #------------------------------------------------------------
