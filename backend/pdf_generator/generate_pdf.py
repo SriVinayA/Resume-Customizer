@@ -103,6 +103,7 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_filename: Optional[s
     try:
         # Generate a PDF from the resume data
         output_path = f"output/{output_filename}.pdf"
+        latex_path = f"output/{output_filename}.tex"
         json_to_pdf(resume_data, output_path, verbose)
         
         logger.info(f"Generated PDF at {output_path}")
@@ -122,8 +123,18 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_filename: Optional[s
                 if s3_url:
                     result["s3_pdf_url"] = s3_url
                     logger.info(f"Uploaded PDF to S3: {s3_url}")
+                
+                # Upload LaTeX file to S3 if it exists
+                if os.path.exists(latex_path):
+                    latex_s3_path = f"latex/{output_filename}.tex"
+                    latex_s3_url = upload_file_to_s3(latex_path, s3_bucket, latex_s3_path, content_type="text/plain")
+                    if latex_s3_url:
+                        result["s3_latex_url"] = latex_s3_url
+                        logger.info(f"Uploaded LaTeX file to S3: {latex_s3_url}")
+                else:
+                    logger.warning(f"LaTeX file not found at {latex_path}, cannot upload to S3")
             except Exception as e:
-                logger.error(f"Error uploading PDF to S3: {str(e)}")
+                logger.error(f"Error uploading files to S3: {str(e)}")
         
         return result
     except Exception as e:

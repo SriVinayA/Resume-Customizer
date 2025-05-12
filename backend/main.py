@@ -744,8 +744,11 @@ async def view_latex(path: str = None, s3_url: str = None):
             pdf_filename = os.path.basename(object_name)
             base_name = os.path.splitext(pdf_filename)[0]
             
-            # Create corresponding LaTeX filename
+            # Create corresponding LaTeX filename - use latex folder
+            # Convert the path 'resumes/filename.pdf' to 'latex/filename.tex'
             latex_object_name = f"latex/{base_name}.tex"
+            
+            logger.debug(f"Looking for LaTeX file in S3: {bucket_name}/{latex_object_name}")
             
             # Download the LaTeX file temporarily
             temp_dir = tempfile.mkdtemp()
@@ -755,8 +758,10 @@ async def view_latex(path: str = None, s3_url: str = None):
             success = download_file_from_s3(bucket_name, latex_object_name, temp_file)
             if success:
                 latex_path = temp_file
+                logger.debug(f"Successfully downloaded LaTeX file from S3: {latex_object_name}")
             else:
-                raise HTTPException(status_code=404, detail="LaTeX file not found in S3")
+                logger.error(f"LaTeX file not found in S3: {latex_object_name}")
+                raise HTTPException(status_code=404, detail=f"LaTeX file not found in S3: {latex_object_name}")
         
         # If local PDF path is provided
         elif path:
@@ -773,7 +778,12 @@ async def view_latex(path: str = None, s3_url: str = None):
             latex_path = os.path.join(latex_dir, f"{base_name}.tex")
             
             if not os.path.isfile(latex_path):
-                raise HTTPException(status_code=404, detail="LaTeX file not found")
+                # Try alternate location - same directory with .tex extension
+                alternate_latex_path = os.path.splitext(path)[0] + '.tex'
+                if os.path.isfile(alternate_latex_path):
+                    latex_path = alternate_latex_path
+                else:
+                    raise HTTPException(status_code=404, detail="LaTeX file not found")
         
         # Neither path nor S3 URL provided
         else:

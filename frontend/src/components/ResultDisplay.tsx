@@ -2,6 +2,7 @@ import React from 'react';
 import GlassCard from './GlassCard';
 import GlassButton from './GlassButton';
 import { CustomizeResumeResponse } from '@/types';
+import { toast } from 'react-hot-toast';
 
 interface ResultDisplayProps {
   result: CustomizeResumeResponse | null;
@@ -68,14 +69,32 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseU
         latexUrl = `${apiBaseUrl}/view-latex/?path=${result.pdf_path}`;
       }
 
+      // Show loading indicator or message
+      const loadingToast = toast ? toast.loading("Fetching LaTeX content...") : null;
+
       // Fetch the LaTeX content
       const response = await fetch(latexUrl);
       
+      // Clear loading indicator
+      if (loadingToast && toast) toast.dismiss(loadingToast);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch LaTeX content');
+        const errorText = await response.text();
+        console.error('Error fetching LaTeX:', response.status, errorText);
+        
+        // Provide more specific error messages based on the response
+        if (response.status === 404) {
+          throw new Error('LaTeX source file not found. This might happen if you\'re using an older PDF.');
+        } else {
+          throw new Error(`Failed to fetch LaTeX content: ${response.status} ${response.statusText}`);
+        }
       }
       
       const latexContent = await response.text();
+      
+      if (!latexContent || latexContent.trim().length === 0) {
+        throw new Error('Retrieved LaTeX content is empty');
+      }
       
       // Create a form to post to Overleaf
       const form = document.createElement('form');
@@ -88,21 +107,32 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseU
       input.type = 'hidden';
       input.name = 'snip_uri';
       
-      // Encode the LaTeX content
-      const encodedContent = btoa(unescape(encodeURIComponent(latexContent)));
-      input.value = `data:application/x-tex;base64,${encodedContent}`;
-      
-      form.appendChild(input);
-      document.body.appendChild(form);
-      
-      // Submit the form
-      form.submit();
-      
-      // Clean up the form
-      document.body.removeChild(form);
+      try {
+        // Encode the LaTeX content
+        const encodedContent = btoa(unescape(encodeURIComponent(latexContent)));
+        input.value = `data:application/x-tex;base64,${encodedContent}`;
+        
+        form.appendChild(input);
+        document.body.appendChild(form);
+        
+        // Submit the form
+        form.submit();
+        
+        // Clean up the form
+        document.body.removeChild(form);
+      } catch (encodingError) {
+        console.error('Error encoding LaTeX for Overleaf:', encodingError);
+        throw new Error('Error preparing LaTeX content for Overleaf. The content may contain invalid characters.');
+      }
     } catch (error) {
       console.error('Error preparing for Overleaf:', error);
-      alert('Error preparing for Overleaf: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      
+      // Use toast if available, otherwise fall back to alert
+      if (toast) {
+        toast.error(error instanceof Error ? error.message : 'Unknown error preparing LaTeX for Overleaf');
+      } else {
+        alert('Error preparing for Overleaf: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      }
     }
   };
 
