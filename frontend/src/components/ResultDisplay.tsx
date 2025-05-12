@@ -9,6 +9,29 @@ interface ResultDisplayProps {
   apiBaseUrl: string;
 }
 
+// Helper function to render score with color
+const ScoreDisplay = ({ score, label }: { score: number, label: string }) => {
+  let colorClass = 'text-red-500';
+  if (score >= 80) colorClass = 'text-green-500';
+  else if (score >= 60) colorClass = 'text-yellow-500';
+  else if (score >= 40) colorClass = 'text-orange-500';
+  
+  return (
+    <div className="text-center">
+      <div className="text-sm opacity-80">{label}</div>
+      <div className={`text-4xl font-bold ${colorClass}`}>{score}</div>
+    </div>
+  );
+};
+
+// Helper function to format summary keys
+const formatSummaryKey = (key: string): string => {
+  return key
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseUrl }) => {
   if (!result) return null;
 
@@ -83,6 +106,8 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseU
     }
   };
 
+  const hasAtsData = result.initial_ats_score !== undefined && result.final_ats_score !== undefined;
+
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Result Header */}
@@ -100,7 +125,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseU
       {/* Results Section */}
       {result.success && (
         <>
-          {/* Actions */}
+          {/* Actions - Moved to the top as requested */}
           <div className="flex flex-wrap gap-4 justify-center">
             {result.pdf_path && (
               <>
@@ -123,11 +148,71 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, onReset, apiBaseU
             </GlassButton>
           </div>
 
-          {/* Modifications Summary */}
-          {result.modifications_summary && (
+          {/* ATS Score Card - Moved after actions */}
+          {hasAtsData && (
             <GlassCard className="p-6">
-              <h3 className="text-xl font-bold mb-3">Modifications Summary</h3>
-              <p className="whitespace-pre-line">{result.modifications_summary}</p>
+              <h3 className="text-xl font-bold mb-4 text-center">ATS Compatibility Score</h3>
+              
+              <div className="flex justify-between items-center mb-6">
+                <ScoreDisplay score={result.initial_ats_score || 0} label="Original" />
+                
+                <div className="flex flex-col items-center">
+                  <div className="text-2xl">→</div>
+                  <div className={`text-sm ${(result.score_improvement || 0) > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {result.score_improvement && result.score_improvement > 0 ? '+' : ''}{result.score_improvement || 0}
+                  </div>
+                </div>
+                
+                <ScoreDisplay score={result.final_ats_score || 0} label="Optimized" />
+              </div>
+              
+              {/* Improvement Feedback */}
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-bold">Initial ATS Feedback:</h4>
+                  <ul className="list-disc pl-5 space-y-1 mt-2">
+                    {result.initial_ats_feedback?.map((item, idx) => (
+                      <li key={`initial-${idx}`} className="opacity-80">{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-bold">Optimization Results:</h4>
+                  <ul className="list-disc pl-5 space-y-1 mt-2">
+                    {result.final_ats_feedback?.map((item, idx) => (
+                      <li key={`final-${idx}`} className="opacity-80">{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </GlassCard>
+          )}
+
+          {/* Modifications Summary */}
+          {result.modifications_summary && typeof result.modifications_summary === 'object' && Object.keys(result.modifications_summary).length > 0 && (
+            <GlassCard className="p-6">
+              <h3 className="text-xl font-bold mb-4">Modifications Summary</h3>
+              <div className="space-y-3">
+                {Object.entries(result.modifications_summary).map(([key, value]) => {
+                  if (!value) return null; // Skip if value is undefined or null
+                  const formattedKey = formatSummaryKey(key);
+                  return (
+                    <div key={key}>
+                      <h4 className="font-semibold text-md">{formattedKey}</h4>
+                      {Array.isArray(value) ? (
+                        <ul className="list-disc list-inside pl-2 space-y-1 opacity-90">
+                          {value.map((item, index) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="opacity-90 whitespace-pre-line">{value}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </GlassCard>
           )}
 

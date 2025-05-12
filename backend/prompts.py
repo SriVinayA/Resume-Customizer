@@ -7,7 +7,15 @@ Centralizing prompts makes them easier to maintain and update.
 
 # System prompts
 DOCUMENT_PARSER_SYSTEM_PROMPT = "You are an expert document parser specialized in resume and job description analysis."
-RESUME_CUSTOMIZER_SYSTEM_PROMPT = """You are an expert resume architect that customizes resumes to match job descriptions while following strict preservation and modification rules. IMPORTANT: Never include structural markers like '(Situation)', '(Task)', '(Action)', '(Result)' in the final content - use these only as frameworks for creating the content. Also, use proper category names without underscores (e.g., 'Web Technologies' not 'web_technologies', 'Tools & Frameworks' not 'tools_frameworks'). For job titles, use ONLY the title without technology stacks in parentheses."""
+RESUME_CUSTOMIZER_SYSTEM_PROMPT = """You are an expert resume architect and ATS optimization specialist that customizes resumes to match job descriptions while following strict preservation and modification rules. 
+
+Your primary goal is to significantly increase the resume's ATS compatibility score by strategically incorporating keywords and phrases from the job description, restructuring content for maximum relevance, and highlighting quantifiable achievements.
+
+IMPORTANT: 
+- Never include structural markers like '(Situation)', '(Task)', '(Action)', '(Result)' in the final content - use these only as frameworks for creating the content. 
+- Use proper category names without underscores (e.g., 'Web Technologies' not 'web_technologies', 'Tools & Frameworks' not 'tools_frameworks'). 
+- For job titles, use ONLY the title without technology stacks in parentheses.
+- Your customizations must significantly improve the resume's chances of passing through ATS filters by achieving at least a 30% increase in keyword relevance and content alignment."""
 
 # Resume analysis prompt
 RESUME_ANALYSIS_PROMPT = """Analyze this resume and extract the following information in JSON format:
@@ -158,4 +166,67 @@ Generate a customized version of the resume that follows these rules. Return the
 Also include a "modifications_summary" section that explains what changes were made and why (e.g., "Adjusted job title X to Y for better alignment", "Added keywords A, B, C to skills section", "Rewrote bullet points in experience section using STAR method and quantification", "Removed project Z due to low relevance").
 
 Make sure all object properties and array items are properly formatted with correct JSON syntax.
+""" 
+
+# ATS evaluation prompt
+ATS_EVALUATION_PROMPT = """
+Evaluate this resume against the provided job description to determine its ATS (Applicant Tracking System) compatibility score and provide actionable improvements. 
+**Your primary goal is to assess how well the resume aligns with the specific job description provided. A low degree of relevance or a significant mismatch in keywords, skills, and experience should result in a correspondingly low score.**
+
+RESUME:
+{resume_json}
+
+JOB DESCRIPTION:
+{job_description_json}
+
+Analyze the resume for its compatibility with Applicant Tracking Systems using the following criteria. **Critically evaluate each point, especially concerning the direct relevance to the job description.**
+
+1.  **Keyword Matching (40% of score weight):**
+    *   How effectively does the resume incorporate essential keywords, phrases, and terminology directly from the job description?
+    *   Are keywords used naturally and in relevant contexts?
+    *   What percentage of critical job-specific keywords are present? A resume with >85% keyword coverage should score high in this category.
+    *   **A low match rate for critical keywords should significantly decrease the score.**
+
+2.  **Content Relevance (30% of score weight):**
+    *   How well do the candidate's listed experiences, responsibilities, and achievements align with the requirements and duties outlined in the job description?
+    *   Is the career trajectory and skill set presented in the resume a strong fit for the target role?
+    *   **If the resume's content is largely unrelated to the job description, the score must be low.**
+
+3.  **Technical Skills Alignment (20% of score weight):**
+    *   Does the resume clearly list ALL technical skills that are explicitly mentioned or strongly implied in the job description?
+    *   Is there a clear demonstration of proficiency in required technologies or tools?
+    *   **Missing key technical skills required by the job should heavily impact the score.**
+
+4.  **Formatting and Impact (10% of score weight):**
+    *   Is the resume well-structured with clear section headings and bullet points?
+    *   Does it use quantifiable metrics and achievements relevant to the job?
+    *   Is the formatting ATS-friendly (avoiding tables, images, columns that can confuse parsers)?
+
+SCORING GUIDELINES:
+- 90-100: Exceptional match - nearly all keywords present with highly relevant experience
+- 75-89: Strong match - most key requirements covered with aligned experience
+- 60-74: Good match - covers many requirements but has some gaps
+- 40-59: Moderate match - covers some requirements but significant areas missing
+- Below 40: Poor match - fundamental mismatch between resume and job description
+
+Return a JSON response with:
+1.  "score": A numeric score between 0-100 representing ATS compatibility. 
+    *   **This score MUST heavily reflect the degree of alignment between the resume and the job description.**
+    *   **For original resumes: Assign appropriate scores based on existing alignment, typically below 50 for partially mismatched content.**
+    *   **For optimized resumes: If properly customized with relevant keywords and content, scores should be at least 30-40 points higher than unoptimized versions. Well-optimized resumes should achieve scores of 75+.**
+
+2.  "improvements": An array of specific, actionable suggestions for improving the resume's alignment with THIS job description and ATS performance.
+
+3.  "keyword_match_analysis": An object containing:
+    *   "matched_keywords": Array of crucial keywords from the job description found in the resume.
+    *   "missing_keywords": Array of important keywords from the job description that are missing or underrepresented in the resume.
+    *   "keyword_match_percentage": Numeric percentage (0-100) of key job description terms found in the resume.
+
+4.  "section_scores": An object with scores (0-100) for each major section, reflecting their relevance and quality against the job description:
+    *   "skills_score": Rating of skills section against job requirements.
+    *   "experience_score": Rating of experience section against job requirements.
+    *   "education_score": Rating of education section against job requirements.
+    *   "overall_format_score": Rating of overall formatting and ATS-friendliness.
+
+Provide clear, actionable suggestions focused on enhancing the resume's chances for THIS specific job.
 """ 

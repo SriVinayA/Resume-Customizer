@@ -6,6 +6,8 @@ import argparse
 import subprocess
 import webbrowser
 import glob
+from pathlib import Path
+from typing import Dict, Any, Optional
 from .constants import (
     LATEX_SPECIAL_CHARS,
     SECTION_PATTERNS,
@@ -752,12 +754,21 @@ def populate_template(template, resume_data):
     # Create a copy of the template for manipulation
     populated_template = template
     
+    # Get projects from either direct 'projects' field or from 'other.projects'
+    projects = resume_data.get('projects', [])
+    
+    # If projects is empty and there's an 'other' field with 'projects'
+    if (not projects or len(projects) == 0) and 'other' in resume_data and isinstance(resume_data['other'], dict):
+        other_projects = resume_data['other'].get('projects', [])
+        if other_projects and len(other_projects) > 0:
+            projects = other_projects
+    
     # Format the sections first
     sections = {
         'personal_info': format_personal_info(resume_data.get('personal_info', '')),
         'education': format_education(resume_data.get('education', '')),
         'experience': format_experience(resume_data.get('experience', [])),
-        'projects': format_projects(resume_data.get('projects', [])),
+        'projects': format_projects(projects),
         'skills': format_skills(resume_data.get('skills', []))
     }
     
@@ -856,6 +867,53 @@ def main():
             sys.exit(1)
     else:
         print("Resume conversion complete!")
+
+def json_to_pdf(resume_data: Dict[str, Any], output_path: str, verbose: bool = False) -> bool:
+    """
+    Convert resume JSON data to a PDF file.
+    
+    Args:
+        resume_data: The resume data in JSON format
+        output_path: The path where the PDF should be saved
+        verbose: Whether to show detailed output during processing
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        # Get the template path
+        template_path = Path(__file__).parent / "templates" / DEFAULT_TEMPLATE_PATH
+        
+        # Read the LaTeX template
+        template = read_latex_template(template_path)
+        
+        # Convert resume data to LaTeX
+        latex_content = populate_template(template, resume_data)
+        
+        # Create temp file for LaTeX
+        latex_path = output_path.replace('.pdf', '.tex')
+        
+        # Write LaTeX to file
+        with open(latex_path, 'w', encoding='utf-8') as f:
+            f.write(latex_content)
+        
+        # Compile LaTeX to PDF
+        success = compile_latex_to_pdf(
+            latex_path,
+            output_pdf=output_path,
+            verbose=verbose
+        )
+        
+        if success:
+            print(f"Successfully generated PDF: {output_path}")
+            return True
+        else:
+            print(f"Failed to compile PDF to {output_path}")
+            return False
+    
+    except Exception as e:
+        print(f"Error in json_to_pdf: {str(e)}")
+        return False
 
 if __name__ == "__main__":
     main()

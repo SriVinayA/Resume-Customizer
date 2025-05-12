@@ -37,15 +37,25 @@ import uuid
 from datetime import datetime
 import logging
 from dotenv import load_dotenv
+from typing import Dict, Any, Tuple, Optional, Union
 
 # Configure logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Import the JSON to PDF module
-from .json_to_pdf import populate_template, read_latex_template, compile_latex_to_pdf
+from .json_to_pdf import populate_template, read_latex_template, compile_latex_to_pdf, json_to_pdf
 from .constants import DEFAULT_TEMPLATE_PATH
-from .s3_utils import upload_file_to_s3
+
+# Import S3 utilities if available
+try:
+    from .s3_utils import upload_file_to_s3, parse_s3_url
+except ImportError:
+    # Fallback for when S3 utils are not available
+    def upload_file_to_s3(*args, **kwargs):
+        return None
+    def parse_s3_url(*args, **kwargs):
+        return None, None
 
 # Directory for storing generated PDFs
 PDF_OUTPUT_DIR = Path(__file__).parent.parent / "output" / "pdfs"
@@ -68,195 +78,108 @@ def get_s3_bucket_name():
     logger.debug(f"S3 bucket name from environment: {bucket_name}")
     return bucket_name
 
-def generate_resume_pdf(resume_data, template_path=None, output_filename=None, verbose=False, upload_to_s3=True):
+def generate_resume_pdf(resume_data: Dict[str, Any], output_filename: Optional[str] = None, verbose: bool = False) -> Dict[str, str]:
     """
-    Generate a PDF resume from JSON data.
+    Generate a PDF from the given resume data.
     
     Args:
-        resume_data (dict): Resume data in JSON format
-        template_path (str, optional): Path to LaTeX template. Defaults to template.tex.
-        output_filename (str, optional): Name for output file. Defaults to generated UUID.
-        verbose (bool, optional): Whether to show detailed LaTeX compilation output.
-        upload_to_s3 (bool, optional): Whether to upload the PDF to S3. Defaults to True.
+        resume_data: Dictionary containing the resume data
+        output_filename: Optional filename (without extension) for the output PDF
+        verbose: Whether to log verbose output
         
     Returns:
-        tuple: (local_pdf_path, s3_url) - Path to the generated PDF file and S3 URL if uploaded
+        Dictionary with paths to the generated PDF (local and S3 if enabled)
     """
-    # Get template path
-    if not template_path:
-        template_path = Path(__file__).parent / "templates" / DEFAULT_TEMPLATE_PATH
-    
-    # Create unique filenames if not specified
+    # Use provided filename or generate a timestamp-based one
     if not output_filename:
-        # Generate a unique ID for the files
-        unique_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-        output_filename = f"resume_{unique_id}"
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_filename = f"resume_{timestamp}"
     
-    # Ensure output filename doesn't have extension
-    output_filename = output_filename.split('.')[0]
-    
-    # Define output paths
-    latex_path = LATEX_OUTPUT_DIR / f"{output_filename}.tex"
-    pdf_path = PDF_OUTPUT_DIR / f"{output_filename}.pdf"
+    # Ensure output directory exists
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
     
     try:
-        # Read template
-        template = read_latex_template(template_path)
+        # Generate a PDF from the resume data
+        output_path = f"output/{output_filename}.pdf"
+        json_to_pdf(resume_data, output_path, verbose)
         
-        # Convert resume data to LaTeX
-        latex_content = populate_template(template, resume_data)
+        logger.info(f"Generated PDF at {output_path}")
         
-        # Write LaTeX to file
-        with open(latex_path, 'w', encoding='utf-8') as f:
-            f.write(latex_content)
+        result = {
+            "pdf_path": output_path,
+            "custom_filename": f"{output_filename}.pdf"
+        }
         
-        # Compile LaTeX to PDF with reduced output
-        compile_success = compile_latex_to_pdf(
-            str(latex_path),
-            output_pdf=str(pdf_path),
-            verbose=verbose
-        )
+        # Try to upload to S3 if configured
+        s3_bucket = os.getenv("S3_BUCKET_NAME")
+        if s3_bucket:
+            try:
+                # Upload PDF to S3
+                s3_path = f"resumes/{output_filename}.pdf"
+                s3_url = upload_file_to_s3(output_path, s3_bucket, s3_path, content_type="application/pdf")
+                if s3_url:
+                    result["s3_pdf_url"] = s3_url
+                    logger.info(f"Uploaded PDF to S3: {s3_url}")
+            except Exception as e:
+                logger.error(f"Error uploading PDF to S3: {str(e)}")
         
-        if compile_success:
-            print(f"Successfully generated PDF: {pdf_path}")
-            
-            # Upload to S3 if requested and S3 bucket is configured
-            s3_url = None
-            if upload_to_s3:
-                try:
-                    # Get bucket name dynamically
-                    bucket_name = get_s3_bucket_name()
-                    logger.debug(f"Attempting to upload PDF to S3. S3_BUCKET_NAME={bucket_name}")
-                    
-                    # Check if S3 bucket name is configured
-                    if not bucket_name:
-                        logger.warning("S3_BUCKET_NAME environment variable not set. Skipping S3 upload.")
-                    else:
-                        # Create S3 object name for PDF
-                        s3_object_name = f"resumes/{output_filename}.pdf"
-                        logger.debug(f"S3 object name: {s3_object_name}")
-                        
-                        # Check if the PDF file exists
-                        if not os.path.exists(str(pdf_path)):
-                            logger.error(f"File to upload does not exist: {pdf_path}")
-                        else:
-                            logger.debug(f"File exists, size: {os.path.getsize(str(pdf_path))} bytes")
-                            
-                            # Upload the PDF file to S3
-                            s3_url = upload_file_to_s3(
-                                str(pdf_path),
-                                bucket_name,
-                                s3_object_name,
-                                content_type='application/pdf'
-                            )
-                            
-                            if s3_url:
-                                logger.info(f"Successfully uploaded PDF to S3: {s3_url}")
-                                
-                                # Also upload the LaTeX file to S3
-                                latex_object_name = f"latex/{output_filename}.tex"
-                                logger.debug(f"Uploading LaTeX file to S3: {latex_object_name}")
-                                
-                                latex_s3_url = upload_file_to_s3(
-                                    str(latex_path),
-                                    bucket_name,
-                                    latex_object_name,
-                                    content_type='text/plain'
-                                )
-                                
-                                if latex_s3_url:
-                                    logger.info(f"Successfully uploaded LaTeX to S3: {latex_s3_url}")
-                                else:
-                                    logger.error("Failed to upload LaTeX to S3")
-                            else:
-                                logger.error("Failed to upload PDF to S3")
-                except Exception as e:
-                    logger.exception(f"Error uploading files to S3: {e}")
-            else:
-                logger.debug("S3 upload skipped (upload_to_s3=False)")
-            
-            return str(pdf_path), s3_url
-        else:
-            print("Failed to compile PDF")
-            return None, None
-            
+        return result
     except Exception as e:
-        print(f"Error generating PDF: {e}")
-        return None, None
+        logger.error(f"Error generating PDF: {str(e)}")
+        return {}
 
-
-def save_resume_json(resume_data, filename=None, upload_to_s3=True):
+def save_resume_json(resume_data: Dict[str, Any], output_filename: Optional[str] = None) -> Dict[str, str]:
     """
-    Save resume JSON to a file.
+    Save the resume data as a JSON file.
     
     Args:
-        resume_data (dict): Resume data in JSON format
-        filename (str, optional): Output filename. Defaults to a generated UUID.
-        upload_to_s3 (bool, optional): Whether to upload the JSON to S3. Defaults to True.
+        resume_data: Dictionary containing the resume data
+        output_filename: Optional filename (without extension) for the output JSON
         
     Returns:
-        tuple: (local_json_path, s3_url) - Path to the saved JSON file and S3 URL if uploaded
+        Dictionary with paths to the saved JSON (local and S3 if enabled)
     """
-    # Create JSON output directory
-    json_output_dir = Path(__file__).parent.parent / "output" / "json"
-    os.makedirs(json_output_dir, exist_ok=True)
+    # Use provided filename or generate a timestamp-based one
+    if not output_filename:
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_filename = f"resume_{timestamp}"
     
-    # Create filename if not specified
-    if not filename:
-        unique_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-        filename = f"resume_{unique_id}.json"
-    
-    # Ensure filename has .json extension
-    if not filename.endswith('.json'):
-        filename += '.json'
-    
-    # Create output path
-    json_path = json_output_dir / filename
+    # Ensure output directory exists
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
     
     try:
-        # Write JSON to file
-        with open(json_path, 'w', encoding='utf-8') as f:
+        # Save JSON to file
+        json_path = f"output/{output_filename}.json"
+        with open(json_path, 'w') as f:
             json.dump(resume_data, f, indent=2)
         
-        print(f"Successfully saved JSON: {json_path}")
+        logger.info(f"Saved resume JSON to {json_path}")
         
-        # Upload to S3 if requested and S3 bucket is configured
-        s3_url = None
-        if upload_to_s3:
+        result = {
+            "json_path": json_path
+        }
+        
+        # Try to upload to S3 if configured
+        s3_bucket = os.getenv("S3_BUCKET_NAME")
+        if s3_bucket:
             try:
-                # Get bucket name dynamically
-                bucket_name = get_s3_bucket_name()
-                logger.debug(f"Attempting to upload JSON to S3. S3_BUCKET_NAME={bucket_name}")
-                
-                # Check if S3 bucket name is configured
-                if not bucket_name:
-                    logger.warning("S3_BUCKET_NAME environment variable not set. Skipping S3 upload.")
-                else:
-                    # Create S3 object name
-                    s3_object_name = f"json/{filename}"
-                    
-                    # Upload the file to S3
-                    s3_url = upload_file_to_s3(
-                        str(json_path),
-                        bucket_name,
-                        s3_object_name,
-                        content_type='application/json'
-                    )
-                    
-                    if s3_url:
-                        logger.info(f"Successfully uploaded JSON to S3: {s3_url}")
-                    else:
-                        logger.error("Failed to upload JSON to S3")
+                # Upload JSON to S3
+                s3_path = f"json/{output_filename}.json"
+                s3_url = upload_file_to_s3(json_path, s3_bucket, s3_path, content_type="application/json")
+                if s3_url:
+                    result["s3_json_url"] = s3_url
+                    logger.info(f"Uploaded JSON to S3: {s3_url}")
             except Exception as e:
-                logger.exception(f"Error uploading JSON to S3: {e}")
-        else:
-            logger.debug("S3 upload skipped (upload_to_s3=False)")
+                logger.error(f"Error uploading JSON to S3: {str(e)}")
         
-        return str(json_path), s3_url
+        return result
     except Exception as e:
-        logger.error(f"Error saving JSON: {e}")
-        return None, None
-
+        logger.error(f"Error saving resume JSON: {str(e)}")
+        return {}
 
 if __name__ == "__main__":
     # Example usage (for testing)
