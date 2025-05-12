@@ -10,6 +10,7 @@ This project is an end-to-end solution for customizing resumes to match job desc
 .
 ├── backend
 │   ├── main.py                # FastAPI backend API
+│   ├── prompts.py             # AI prompts for resume customization and ATS evaluation
 │   ├── requirements.txt       # Python dependencies
 │   ├── .env                   # Environment variables (API keys)
 │   ├── pdf_generator/         # PDF/LaTeX generation utilities
@@ -34,6 +35,8 @@ This project is an end-to-end solution for customizing resumes to match job desc
 ## Features
 - **AI Resume Parsing:** Extracts structured data from resumes and job descriptions
 - **Resume Customization:** Uses OpenAI to tailor resumes for specific jobs using the STAR method
+- **ATS Compatibility Scoring:** Evaluates resume alignment with job descriptions and provides improvement recommendations
+- **Score Comparison:** Shows before/after ATS scores with detailed feedback
 - **STAR Method Implementation:** All experience and project descriptions follow the Situation, Task, Action, Result format
 - **No Summary Section:** Focuses on detailed achievements rather than general summaries
 - **PDF Generation:** Converts customized resumes to professional PDFs via LaTeX
@@ -102,9 +105,30 @@ This project is an end-to-end solution for customizing resumes to match job desc
 1. Open the frontend in your browser.
 2. Upload your resume (PDF) and paste the job description.
 3. Click "Customize Resume".
-4. View the summary of changes and customized skills.
-5. Download the customized PDF or edit in Overleaf.
-6. If AWS S3 is configured, PDFs will be stored in the cloud for improved scalability and availability.
+4. Review the ATS compatibility scores (before/after customization) and feedback.
+5. View the summary of changes and customized skills.
+6. Download the customized PDF or edit in Overleaf.
+7. If AWS S3 is configured, PDFs will be stored in the cloud for improved scalability and availability.
+
+---
+
+## ATS Compatibility Scoring
+
+The application evaluates your resume against the job description to determine its Applicant Tracking System (ATS) compatibility:
+
+- **Initial ATS Score:** Shows how your original resume scores against the job description
+- **Optimized ATS Score:** Shows how your customized resume scores after AI optimization
+- **Score Improvement:** Displays the point improvement between original and optimized versions
+- **Detailed Feedback:** Provides specific recommendations for further improvements
+- **Keyword Analysis:** Identifies matched and missing keywords from the job description
+
+The scoring algorithm analyzes:
+- Keyword matching (40%)
+- Content relevance (30%)
+- Technical skills alignment (20%)
+- Formatting and impact (10%)
+
+Well-optimized resumes aim to achieve a score of 75 or higher, which significantly increases chances of passing ATS filters.
 
 ---
 
@@ -132,7 +156,7 @@ See [README_S3_INTEGRATION.md](./README_S3_INTEGRATION.md) for detailed setup in
 
 ## API Overview
 
-- `POST /customize-resume` — Customize a resume for a job description and return PDF
+- `POST /customize-resume` — Customize a resume for a job description, evaluate ATS score, and return PDF
 - `GET /download-pdf` — Download generated PDF (local or S3)
 - `GET /view-pdf` — View PDF in browser (local or S3)
 - `GET /view-latex` — View LaTeX source
